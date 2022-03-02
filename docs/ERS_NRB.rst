@@ -1,14 +1,14 @@
 #################
-S1-NRB Production
+ERS-NRB Production
 #################
 
-The following describes the current workflow for producing the Sentinel-1 Normalized Radar Backscatter product (S1-NRB), which is being developed in study 1 of the COPA project.
+The following describes the current workflow for producing the ERS Normalized Radar Backscatter product (ERS-NRB), which is being developed in study 1 of the COPA project.
 This is not part of the official pyroSAR documentation.
 However, as pyroSAR is the foundation of the processor, its documentation is used to outline the processor details to conveniently link to all relevant functionality.
 
 
 The basis of the processing chain builds the Sentinel-2 Military Grid Reference System (MGRS) tiling system.
-Hence, a reference file is needed containing the respective tile information for processing S1-NRB products.
+Hence, a reference file is needed containing the respective tile information for processing ERS-NRB products.
 A KML file is available online that will be used in the following steps:
 
 https://hls.gsfc.nasa.gov/wp-content/uploads/2016/03/S2A_OPER_GIP_TILPAR_MPC__20151209T095117_V20150622T000000_21000101T000000_B00.kml
@@ -30,7 +30,7 @@ The code snippet below demonstrates the tile reading mechanism (using class `spa
             feat = None
         return wkt2vector(attrib['UTM_WKT'], int(attrib['EPSG']))
 
-The S1 images are managed in a local SQLite database to select scenes for processing (see section `Database Handling`_).
+The ERS images are managed in a local SQLite database to select scenes for processing (see section `Database Handling`_).
 
 After loading an MGRS tile as `spatialist.vector.Vector`_ object and selecting all relevant overlapping scenes
 from the database, processing can commence.
@@ -71,11 +71,11 @@ Alternative to the auto-download options, a custom DEM can be passed to `pyroSAR
 The function `pyroSAR.auxdata.dem_create`_ can be used to directly convert between EGM96 and WGS84 heights using GDAL.
 This way, the argument ``externalDEMApplyEGM`` of function `pyroSAR.snap.util.geocode`_ can be set to ``False`` and no additional lookup file is needed.
 
-Sentinel-1 orbit state vector files (OSV) for enhancing the orbit location accuracy are downloaded directly by pyroSAR (see `pyroSAR.S1.OSV`_), but can also be downloaded automatically by SNAP.
-For S1-NRB processing at least Restituted Orbit files (RESORB) are needed while the more accurate Precise Orbit Ephemerides (POEORB) delivered two weeks after scene acquisition do not provide additional benefit.
+Sentinel-1 orbit state vector files (OSV) for enhancing the orbit location accuracy are downloaded directly by pyroSAR (see `pyroSAR.ERS.OSV`_), but can also be downloaded automatically by SNAP.
+For ERS-NRB processing at least Restituted Orbit files (RESORB) are needed while the more accurate Precise Orbit Ephemerides (POEORB) delivered two weeks after scene acquisition do not provide additional benefit.
 
 The function `pyroSAR.snap.util.geocode`_ will create a list of plain GeoTIFF files, which are slightly larger than the actual tile to ensure full tile coverage after geocoding.
-These files are then subsetted to the actual tile extent, converted to Cloud Optimized GeoTIFFs (COG), and renamed to the S1-NRB naming scheme.
+These files are then subsetted to the actual tile extent, converted to Cloud Optimized GeoTIFFs (COG), and renamed to the ERS-NRB naming scheme.
 The function `spatialist.auxil.gdalwarp`_ is used for this task, which is a simple wrapper around the gdalwarp utility of GDAL.
 The following is another incomplete code example highlighting the general procedure of converting the individual images.
 The ``outfile`` name is generated from information of the source images, the MGRS tile ID and the name of the respective file as written by `pyroSAR.snap.util.geocode`_.
@@ -135,7 +135,7 @@ In a last step the OGC XML and STAC JSON files will be written for each tile. Th
 .. _pyroSAR.auxdata.dem_autoload: https://pyrosar.readthedocs.io/en/latest/pyroSAR.html#pyroSAR.auxdata.dem_autoload
 .. _pyroSAR.auxdata.dem_create: https://pyrosar.readthedocs.io/en/latest/pyroSAR.html#pyroSAR.auxdata.dem_create
 .. _pyroSAR.auxdata.get_egm96_lookup: https://pyrosar.readthedocs.io/en/latest/pyroSAR.html#pyroSAR.auxdata.get_egm_lookup
-.. _pyroSAR.S1.OSV: https://pyrosar.readthedocs.io/en/latest/pyroSAR.html#pyroSAR.S1.OSV
+.. _pyroSAR.ERS.OSV: https://pyrosar.readthedocs.io/en/latest/pyroSAR.html#pyroSAR.ERS.OSV
 .. _pyroSAR.snap.util.geocode: https://pyrosar.readthedocs.io/en/latest/pyroSAR.html#pyroSAR.snap.util.geocode
 .. _spatialist.auxil.gdalbuildvrt: https://spatialist.readthedocs.io/en/latest/spatialist.html#spatialist.auxil.gdalbuildvrt
 .. _spatialist.auxil.gdalwarp: https://spatialist.readthedocs.io/en/latest/spatialist.html#spatialist.auxil.gdalwarp

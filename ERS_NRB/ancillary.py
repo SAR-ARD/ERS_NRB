@@ -14,7 +14,7 @@ import spatialist
 from spatialist import gdalbuildvrt, Raster, bbox
 import pyroSAR
 from pyroSAR import identify, finder, examine
-from S1_NRB.metadata.extract import get_uid_sid, etree_from_sid, find_in_annotation
+from ERS_NRB.metadata.extract import get_uid_sid, etree_from_sid, find_in_annotation
 
 
 def vrt_pixfun(src, dst, fun, scale=None, offset=None, options=None, overviews=None, overview_resampling=None):
@@ -541,11 +541,11 @@ def get_max_ext(boxes, buffer=None):
     boxes: list[spatialist.vector.Vector objects]
         List of vector objects.
     buffer: float, optional
-        The buffer in degrees to add to the extent.
+        The buffer to apply to the extent.
     Returns
     -------
     max_ext: dict
-        The maximum extent of the selected vector objects including the chosen buffer.
+        The maximum extent of the selected vector objects including buffer.
     """
     max_ext = {}
     for geo in boxes:
@@ -567,7 +567,7 @@ def get_max_ext(boxes, buffer=None):
     return max_ext
 
 
-def set_logging(config, debug=False):
+def set_logging(config):
     """
     Set logging for the current process.
     
@@ -575,8 +575,6 @@ def set_logging(config, debug=False):
     ----------
     config: dict
         Dictionary of the parsed config parameters for the current process.
-    debug: bool, optional
-        Set pyroSAR logging level to DEBUG? Default is False.
     
     Returns
     -------
@@ -585,10 +583,7 @@ def set_logging(config, debug=False):
     """
     # pyroSAR logging as sys.stdout
     log_pyro = logging.getLogger('pyroSAR')
-    if debug:
-        log_pyro.setLevel(logging.DEBUG)
-    else:
-        log_pyro.setLevel(logging.INFO)
+    log_pyro.setLevel(logging.INFO)
     sh = logging.StreamHandler(sys.stdout)
     log_pyro.addHandler(sh)
     
@@ -596,7 +591,7 @@ def set_logging(config, debug=False):
     now = datetime.now().strftime('%Y%m%dT%H%M')
     log_local = logging.getLogger(__name__)
     log_local.setLevel(logging.DEBUG)
-    log_file = os.path.join(config['out_dir'], 'log', f"{now}_process.log")
+    log_file = os.path.join(config['work_dir'], 'log', f"{now}_process.log")
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
     fh = logging.FileHandler(filename=log_file, mode='a')
     log_local.addHandler(fh)
@@ -628,14 +623,8 @@ def _log_process_config(logger, config):
     -------
     None
     """
-    try:
-        core = examine.ExamineSnap().get_version('core')
-        s1tbx = examine.ExamineSnap().get_version('s1tbx')
-        snap_core = f"{core['version']} | {core['date']}"
-        snap_s1tbx = f"{s1tbx['version']} | {s1tbx['date']}"
-    except RuntimeError:
-        snap_core = 'unknown'
-        snap_s1tbx = 'unknown'
+    core = examine.ExamineSnap().get_version('core')
+    s1tbx = examine.ExamineSnap().get_version('s1tbx')
     
     header = f"""
     ====================================================================================================================
@@ -661,8 +650,8 @@ def _log_process_config(logger, config):
     ====================================================================================================================
     SOFTWARE
     
-    snap-core: {snap_core}
-    snap-s1tbx: {snap_s1tbx}
+    snap-core: {core['version']} | {core['date']}
+    snap-s1tbx: {s1tbx['version']} | {s1tbx['date']}
     python: {sys.version}
     python-pyroSAR: {pyroSAR.__version__}
     python-spatialist: {spatialist.__version__}

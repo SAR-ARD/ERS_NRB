@@ -88,14 +88,14 @@ def description2dict(description):
     return attrib
 
 
-def main(config, spacing):
+def main(config, tr):
     """
     
     Parameters
     ----------
     config: dict
         Dictionary of the parsed config parameters for the current process.
-    spacing: int
+    tr: int
         The target pixel spacing in meters, which is passed to `pyroSAR.snap.util.geocode`.
     
     Returns
@@ -120,8 +120,8 @@ def main(config, spacing):
         with extract_tile(kml=config['kml_file'], tile=tile) as vec:
             ext = vec.extent
             epsg = vec.getProjection('epsg')
-            xmax = ext['xmax'] - spacing / 2
-            ymin = ext['ymin'] + spacing / 2
+            xmax = ext['xmax'] - tr / 2
+            ymin = ext['ymin'] + tr / 2
             geo_dict[tile] = {'ext': ext,
                               'epsg': epsg,
                               'xmax': xmax,

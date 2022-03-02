@@ -5,13 +5,12 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
-    name='S1_NRB',
-    setup_requires=['setuptools_scm'],
-    use_scm_version=True,
-    description="Prototype processor for the Sentinel-1 Normalized Radar Backscatter (S1 NRB) product",
+    name='ERS_NRB',
+    version='0.1.0',
+    description="Prototype processor for the ERS Normalized Radar Backscatter (ERS NRB) product",
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url="https://github.com/SAR-ARD/S1_NRB",
+    url="https://github.com/SAR-ARD/ERS_NRB",
     author="John Truckenbrodt, Marco Wolsza",
     author_email="marco.wolsza@uni-jena.de",
     packages=find_packages(where='.'),
@@ -20,12 +19,11 @@ setup(
                       'click',
                       'lxml',
                       'pystac',
-                      'pyroSAR @ git+https://github.com/johntruckenbrodt/pyroSAR.git',
-                      'spatialist>=0.10.0',
+                      'pyroSAR',
                       'scipy'],
-    python_requires='>=3.8',
+    python_requires='>=3.6',
     zip_safe=False,
     entry_points={
-        'console_scripts': ['s1_nrb=S1_NRB.cli:cli']
+        'console_scripts': ['ers_nrb=ERS_NRB.cli:cli']
     }
 )
