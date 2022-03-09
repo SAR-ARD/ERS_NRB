@@ -68,8 +68,8 @@ def product_json(meta, target, tifs):
                   product_type=meta['prod']['card4l-name'])
     
     sat_ext.apply(orbit_state=OrbitState[meta['common']['orbit'].upper()],
-                  relative_orbit=meta['common']['orbitNumbers_rel']['stop'],
-                  absolute_orbit=meta['common']['orbitNumbers_abs']['stop'])
+                  relative_orbit=meta['common']['orbitNumbers_rel'],
+                  absolute_orbit=meta['common']['orbitNumbers_abs'])
     
     proj_ext.apply(epsg=int(meta['prod']['crsEPSG']),
                    wkt2=meta['prod']['crsWKT'],
@@ -283,6 +283,7 @@ def source_json(meta, target):
     os.makedirs(metadir, exist_ok=True)
     
     for uid in list(meta['source'].keys()):
+        print(uid)
         scene = os.path.basename(meta['source'][uid]['filename']).split('.')[0]
         outname = os.path.join(metadir, '{}.json'.format(scene))
         print(outname)
@@ -314,36 +315,37 @@ def source_json(meta, target):
         item.stac_extensions.append('https://stac-extensions.github.io/card4l/v1.0.0/sar/source.json')
         
         enl = meta['source'][uid]['perfEquivalentNumberOfLooks']
-        # sar_ext.apply(instrument_mode=meta['common']['operationalMode'],
-        #               frequency_band=FrequencyBand[meta['common']['radarBand'].upper()],
-        #               polarizations=[Polarization[pol] for pol in meta['common']['polarisationChannels']],
-        #               product_type=meta['source'][uid]['productType'],
+        sar_ext.apply(instrument_mode=meta['common']['operationalMode'],
+                      frequency_band=FrequencyBand[meta['common']['radarBand'].upper()],
+                      polarizations=[Polarization[pol] for pol in meta['common']['polarisationChannels']],
+                      product_type=meta['source'][uid]['productType'],
         #               center_frequency=float(meta['common']['radarCenterFreq']),
         #               resolution_range=float(min(meta['source'][uid]['rangeResolution'].values())),
         #               resolution_azimuth=float(min(meta['source'][uid]['azimuthResolution'].values())),
-        #               pixel_spacing_range=float(meta['source'][uid]['rangePixelSpacing']),
-        #               pixel_spacing_azimuth=float(meta['source'][uid]['azimuthPixelSpacing']),
-        #               looks_range=int(meta['source'][uid]['rangeNumberOfLooks']),
-        #               looks_azimuth=int(meta['source'][uid]['azimuthNumberOfLooks']),
+                      pixel_spacing_range=float(meta['source'][uid]['rangePixelSpacing']),
+                      pixel_spacing_azimuth=float(meta['source'][uid]['azimuthPixelSpacing']),
+                      looks_range=int(meta['source'][uid]['rangeNumberOfLooks']),
+                      looks_azimuth=int(meta['source'][uid]['azimuthNumberOfLooks']))
         #               looks_equivalent_number=float(enl) if enl is not None else None,
         #               observation_direction=ObservationDirection[meta['common']['antennaLookDirection']])
         
-        # sat_ext.apply(orbit_state=OrbitState[meta['common']['orbit'].upper()],
-        #               relative_orbit=meta['common']['orbitNumbers_rel']['stop'],
-        #               absolute_orbit=meta['common']['orbitNumbers_abs']['stop'])
+        sat_ext.apply(orbit_state=OrbitState[meta['common']['orbit'].upper()],
+                      relative_orbit=meta['common']['orbitNumbers_rel'],
+                      absolute_orbit=meta['common']['orbitNumbers_abs'])
         
         # view_ext.apply(incidence_angle=float(meta['source'][uid]['incidenceAngleMidSwath']),
         #                azimuth=float(meta['source'][uid]['instrumentAzimuthAngle']))
         
-        # item.properties['processing:facility'] = meta['source'][uid]['processingCenter']
-        # item.properties['processing:software'] = {meta['source'][uid]['processorName']:
-        #                                           meta['source'][uid]['processorVersion']}
+        item.properties['processing:facility'] = meta['source'][uid]['processingCenter']
+        item.properties['processing:software'] = {meta['source'][uid]['processorName']:
+                                                  meta['source'][uid]['processorVersion']}
+        item.properties['proj:shape'] = [meta['source'][uid]['lineLength'], meta['source'][uid]['lineTimeInterval']]
         # item.properties['processing:level'] = meta['source'][uid]['processingLevel']
         
         # item.properties['card4l:specification'] = meta['prod']['card4l-name']
         # item.properties['card4l:specification_version'] = meta['prod']['card4l-version']
         # item.properties['card4l:beam_id'] = meta['source'][uid]['swathIdentifier']
-        # item.properties['card4l:orbit_data_source'] = meta['source'][uid]['orbitDataSource']
+        item.properties['card4l:orbit_data_source'] = meta['source'][uid]['orbitDataSource']
         # item.properties['card4l:orbit_mean_altitude'] = float(meta['common']['orbitMeanAltitude'])
         # item.properties['card4l:source_processing_parameters'] = {'lut_applied': meta['source'][uid]['lutApplied'],
         #                                                           'range_look_bandwidth':

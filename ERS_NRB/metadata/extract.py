@@ -445,10 +445,18 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['common']['constellation'] = 'sentinel-1'
     meta['common']['instrumentShortName'] = 'C-SAR'
     # meta['common']['operationalMode'] = prod_meta['mode']
+
+    meta['common']['operationalMode'] = sid0.acquisition_mode
+
     meta['common']['orbitMeanAltitude'] = '{:.2e}'.format(693000)
+
+    meta['common']['orbitNumbers_abs'] = sid0.orbitNumber_abs
+    meta['common']['orbitNumbers_rel'] = sid0.orbitNumber_rel
     meta['common']['orbit'] = {'A': 'ascending', 'D': 'descending'}[sid0.orbit]
-    meta['common']['orbitNumbers_abs'] = sid0.meta['orbitNumber_abs']
-    meta['common']['orbitNumbers_rel'] = sid0.meta['orbitNumber_rel']
+         
+
+    # meta['common']['orbit'] = {'A': 'ascending', 'D': 'descending'}[sid0.orbit]
+    # meta['common']['orbitNumbers_rel'] = sid0.meta['orbitNumber_rel']
     # meta['common']['orbitNumber_start'] = str(meta['common']['orbitNumber_abs']['start'])
     # meta['common']['orbitNumber_stop'] = str(meta['common']['orbitNumber_abs']['stop'])
     meta['common']['platformIdentifier'] = {'ERS1': '1', 'ERS2': '2'}[sid0.sensor]
@@ -459,7 +467,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
                                            'ers2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576'}[meta['common']['platformFullname']]
     meta['common']['polarisationChannels'] = sid0.polarizations
     # meta['common']['polarisationMode'] = prod_meta['pols']
-    meta['common']['radarBand'] = 'C'
+    meta['common']['radarBand'] = sid0.meta['MPH_PHASE']
     meta['common']['radarCenterFreq'] = '{:.3e}'.format(5405000000)
     meta['common']['sensorType'] = 'RADAR'
     
@@ -545,7 +553,6 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # Source metadata
     for uid in list(src_sid.keys()):
         # nsmap = src_xml[uid]['manifest'].nsmap
-        
         # osv = src_sid[uid].getOSV(returnMatch=True, osvType=['POE', 'RES'], useLocal=True)
         coords = src_sid[uid].meta['coordinates']
         # xml_envelop, xml_center = convert_id_coordinates(coords=coords)
@@ -553,7 +560,11 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         # swaths = list(src_xml[uid]['annotation'].keys())
         
         # (sorted alphabetically)
+
+
+
         meta['source'][uid] = {}
+       
         meta['source'][uid]['access'] = 'https://scihub.copernicus.eu'
         meta['source'][uid]['acquisitionType'] = 'NOMINAL'
         # meta['source'][uid]['azimuthLookBandwidth'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
@@ -562,6 +573,11 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         # meta['source'][uid]['azimuthNumberOfLooks'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
         #                                                                  pattern='.//azimuthProcessing/numberOfLooks',
         #                                                                  single=True)
+        meta['source'][uid]['azimuthNumberOfLooks'] = src_sid[uid].meta['SPH_AZIMUTH_LOOKS']
+        meta['source'][uid]['azimuthPixelSpacing'] = src_sid[uid].meta['SPH_AZIMUTH_SPACING']
+        meta['source'][uid]['rangeNumberOfLooks'] = src_sid[uid].meta['SPH_RANGE_LOOKS']
+        meta['source'][uid]['rangePixelSpacing'] = src_sid[uid].meta['SPH_RANGE_SPACING']
+
         # try:
         #     meta['source'][uid]['azimuthPixelSpacing'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
         #                                                                     pattern='.//azimuthPixelSpacing',
@@ -596,6 +612,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         # for orb in list(ORB_MAP.keys()):
         #     if orb in meta['source'][uid]['orbitStateVector']:
         #         meta['source'][uid]['orbitDataSource'] = ORB_MAP[orb]
+        meta['source'][uid]['orbitDataSource'] = src_sid[uid].meta['MPH_VECTOR_SOURCE']
         meta['source'][uid]['orbitDataAccess'] = 'https://scihub.copernicus.eu/gnss'
         np_files = [f for f in src_files if re.search('_NE[BGS]Z', f) is not None]
         # meta['source'][uid]['perfEstimates'] = calc_performance_estimates(files=np_files, ref_tif=tif)
@@ -605,6 +622,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         meta['source'][uid]['perfNoiseEquivalentIntensityType'] = 'gamma0'
         meta['source'][uid]['perfPeakSideLobeRatio'] = None
         meta['source'][uid]['polCalMatrices'] = None
+        meta['source'][uid]['processingCenter'] = src_sid[uid].meta['MPH_PROC_CENTER']
         # meta['source'][uid]['processingCenter'] = f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['organisation']}, " \
         #                                           f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['name']}, " \
         #                                           f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['site']}, " \
@@ -613,7 +631,15 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         # meta['source'][uid]['processingLevel'] = src_xml[uid]['manifest'].find('.//safe:processing', nsmap).attrib['name']
         # meta['source'][uid]['processorName'] = src_xml[uid]['manifest'].find('.//safe:software', nsmap).attrib['name']
         # meta['source'][uid]['processorVersion'] = src_xml[uid]['manifest'].find('.//safe:software', nsmap).attrib['version']
+        try :
+            meta['source'][uid]['processorName'] = src_sid[uid].meta['MPH_SOFTWARE_VER'].split('/')[0]
+            meta['source'][uid]['processorVersion'] = src_sid[uid].meta['MPH_SOFTWARE_VER'].split('/')[1]
+        except:
+            meta['source'][uid]['processorName'] = 'Not found'
+            meta['source'][uid]['processorVersion'] = 'n/a'
         meta['source'][uid]['productType'] = src_sid[uid].meta['product']
+        meta['source'][uid]['lineLength'] = src_sid[uid].meta['SPH_LINE_LENGTH']        
+        meta['source'][uid]['lineTimeInterval'] = src_sid[uid].meta['SPH_LINE_TIME_INTERVAL']
         # meta['source'][uid]['rangeLookBandwidth'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
         #                                                                pattern='.//rangeProcessing/lookBandwidth',
         #                                                                out_type='float')
