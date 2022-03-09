@@ -1,5 +1,3 @@
-print('Start')
-
 import os
 import re
 import time
@@ -9,22 +7,20 @@ from datetime import datetime
 from lxml import etree
 import numpy as np
 from osgeo import gdal
-# from spatialist import Raster, Vector, vectorize, boundary, bbox, intersect, rasterize
+from spatialist import Raster, Vector, vectorize, boundary, bbox, intersect, rasterize
 from spatialist.ancillary import finder
-# from spatialist.auxil import gdalwarp, gdalbuildvrt
+from spatialist.auxil import gdalwarp, gdalbuildvrt
 from pyroSAR import identify_many, Archive
 
 from pyroSAR.snap.util import geocode, noise_power
 from pyroSAR.ancillary import groupbyTime, seconds, find_datasets
 from pyroSAR.auxdata import dem_autoload, dem_create
 from ERS_NRB.config import get_config, geocode_conf, gdal_conf
-print('imported 5')
 
 import ERS_NRB.ancillary as ancil
 import ERS_NRB.tile_extraction as tile_ex
 from ERS_NRB.metadata import extract, xmlparser, stacparser
 gdal.UseExceptions()
-print('imported all')
 
 
 def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None, multithread=True,
