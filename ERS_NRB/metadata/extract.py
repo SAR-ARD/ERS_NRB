@@ -442,8 +442,11 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     
     # Common metadata (sorted alphabetically)
     meta['common']['antennaLookDirection'] = 'RIGHT'
-    meta['common']['constellation'] = 'sentinel-1'
-    meta['common']['instrumentShortName'] = 'C-SAR'
+    # meta['common']['constellation'] = 'sentinel-1'
+    meta['common']['instrumentShortName'] = 'AMI'
+
+    # ENVISAT -> meta['common']['instrumentShortName'] = 'ASAR' 
+
     # meta['common']['operationalMode'] = prod_meta['mode']
 
     meta['common']['operationalMode'] = sid0.acquisition_mode
@@ -468,7 +471,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['common']['polarisationChannels'] = sid0.polarizations
     # meta['common']['polarisationMode'] = prod_meta['pols']
     meta['common']['radarBand'] = sid0.meta['MPH_PHASE']
-    meta['common']['radarCenterFreq'] = '{:.3e}'.format(5405000000)
+    meta['common']['radarCenterFreq'] = '{:.3e}'.format(5300000000)
     meta['common']['sensorType'] = 'RADAR'
     
     # Product metadata (sorted alphabetically)
@@ -565,7 +568,9 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
 
         meta['source'][uid] = {}
        
-        meta['source'][uid]['access'] = 'https://scihub.copernicus.eu'
+        # meta['source'][uid]['access'] = 'https://scihub.copernicus.eu'
+        meta['source'][uid]['access'] = 'https://esar-ds.eo.esa.int/oads/access/collection'
+
         meta['source'][uid]['acquisitionType'] = 'NOMINAL'
         # meta['source'][uid]['azimuthLookBandwidth'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
         #                                                                  pattern='.//azimuthProcessing/lookBandwidth',
@@ -609,10 +614,11 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         #                                                        pattern='.//applicationLutId',
         #                                                        single=True)
         # meta['source'][uid]['orbitStateVector'] = os.path.basename(osv).replace('.zip', '')
+        meta['source'][uid]['orbitStateVector'] = src_sid[uid].meta['DS_ORBIT_STATE_VECTOR_1________NAME'] # Can it be more than one vector? check
         # for orb in list(ORB_MAP.keys()):
         #     if orb in meta['source'][uid]['orbitStateVector']:
         #         meta['source'][uid]['orbitDataSource'] = ORB_MAP[orb]
-        meta['source'][uid]['orbitDataSource'] = src_sid[uid].meta['MPH_VECTOR_SOURCE']
+        meta['source'][uid]['orbitDataSource'] = ORB_MAP[src_sid[uid].meta['MPH_VECTOR_SOURCE']]
         meta['source'][uid]['orbitDataAccess'] = 'https://scihub.copernicus.eu/gnss'
         np_files = [f for f in src_files if re.search('_NE[BGS]Z', f) is not None]
         # meta['source'][uid]['perfEstimates'] = calc_performance_estimates(files=np_files, ref_tif=tif)
@@ -628,7 +634,10 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         #                                           f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['site']}, " \
         #                                           f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['country']}"
         # meta['source'][uid]['processingDate'] = src_xml[uid]['manifest'].find('.//safe:processing', nsmap).attrib['stop']
+
+        meta['source'][uid]['processingDate'] = datetime.strptime(src_sid[uid].meta['MPH_PROC_TIME'], '%Y%m%dT%H%M%S')
         # meta['source'][uid]['processingLevel'] = src_xml[uid]['manifest'].find('.//safe:processing', nsmap).attrib['name']
+        meta['source'][uid]['processingLevel'] = 'TODO'
         # meta['source'][uid]['processorName'] = src_xml[uid]['manifest'].find('.//safe:software', nsmap).attrib['name']
         # meta['source'][uid]['processorVersion'] = src_xml[uid]['manifest'].find('.//safe:software', nsmap).attrib['version']
         try :
@@ -660,7 +669,12 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         meta['source'][uid]['status'] = 'ARCHIVED'
         meta['source'][uid]['timeStart'] = datetime.strptime(src_sid[uid].start, '%Y%m%dT%H%M%S')
         meta['source'][uid]['timeStop'] = datetime.strptime(src_sid[uid].stop, '%Y%m%dT%H%M%S')
+
+        meta['source'][uid]['sensingStart'] = datetime.strptime(src_sid[uid].meta['sensing_start'], '%Y%m%dT%H%M%S')
+        meta['source'][uid]['sensingStop'] = datetime.strptime(src_sid[uid].meta['sensing_stop'], '%Y%m%dT%H%M%S')
+
         # meta['source'][uid]['swathIdentifier'] = re.search('_IW|EW|S[1-6]{1}_', os.path.basename(src_sid[uid].file)).group().replace('_', '')
+        meta['source'][uid]['swathIdentifier'] = src_sid[uid].meta['SPH_SWATH']
         # meta['source'][uid]['swaths'] = swaths
     
     # return meta, m_sid, m_src

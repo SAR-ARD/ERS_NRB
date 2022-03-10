@@ -55,9 +55,19 @@ RES_MAP = {'IW': {'azimuthResolution': {'IW1': '22.5',
                                       'S6': '3.6'}}
            }
 
-ORB_MAP = {'PREORB': 'predicted',
-           'RESORB': 'restituted',
-           'POEORB': 'precise'}
+# ORB_MAP = {'PREORB': 'predicted',
+#            'RESORB': 'restituted',
+#            'POEORB': 'precise'}
+ORB_MAP = {'PD': 'predicted',
+           'RS': 'restituted',
+           'PC': 'precise',
+           'PL': 'preliminary'}
+# Envisat
+# FP = FOS predicted orbit state vectors (NRT processing)
+# DN = DORIS Level 0 navigator product acquired at PDHS (NRT)
+# FR = FOS restituted orbit state vectors
+# DI = DORIS initial (preliminary) orbit
+# DP = DORIS precise orbit If not used, set to ØØ.           
 
 SAMPLE_MAP = {'-dm.tif': {'type': 'mask',
                           'unit': None,

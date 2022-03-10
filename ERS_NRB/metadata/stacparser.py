@@ -47,7 +47,7 @@ def product_json(meta, target, tifs):
     item.common_metadata.end_datetime = stop
     item.common_metadata.created = meta['prod']['timeCreated']
     item.common_metadata.instruments = [meta['common']['instrumentShortName'].lower()]
-    item.common_metadata.constellation = meta['common']['constellation']
+    # item.common_metadata.constellation = meta['common']['constellation']
     item.common_metadata.platform = meta['common']['platformFullname']
     item.common_metadata.gsd = float(meta['prod']['pxSpacingColumn'])
     
@@ -65,7 +65,7 @@ def product_json(meta, target, tifs):
     sar_ext.apply(instrument_mode=meta['common']['operationalMode'],
                   frequency_band=FrequencyBand[meta['common']['radarBand'].upper()],
                   polarizations=[Polarization[pol] for pol in meta['common']['polarisationChannels']],
-                  product_type=meta['prod']['card4l-name'])
+                  product_type=meta['prod']['card4l-name']) # Should be NRB
     
     sat_ext.apply(orbit_state=OrbitState[meta['common']['orbit'].upper()],
                   relative_orbit=meta['common']['orbitNumbers_rel'],
@@ -112,15 +112,20 @@ def product_json(meta, target, tifs):
     item.properties['card4l:geometric_accuracy_radial_rmse'] = meta['prod']['geoCorrAccuracy_rRMSE']
     
     item.add_link(link=pystac.Link(rel='card4l-document',
-                                   target=meta['prod']['card4l-link'].replace('.pdf', '.docx'),
-                                   media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                                   title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'.format(
-                                       meta['prod']['card4l-version'])))
+                                       #    target=meta['prod']['card4l-link'].replace('.pdf', '.docx'),
+                                       target='https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.docx',
+                                       media_type='application/vnd.openxmlformats-officedocument.wordprocessingml'
+                                                  '.document',
+                                       title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
+                                             # ''.format(meta['prod']['card4l-version'])))
+                                             ''.format('5.5')))
     item.add_link(link=pystac.Link(rel='card4l-document',
-                                   target=meta['prod']['card4l-link'],
-                                   media_type='application/pdf',
-                                   title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'.format(
-                                       meta['prod']['card4l-version'])))
+                                       #    target=meta['prod']['card4l-link'],
+                                       target='https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.pdf',
+                                       media_type='application/pdf',
+                                       title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
+                                             # ''.format(meta['prod']['card4l-version'])))
+                                             ''.format('5.5')))
     for src in list(meta['source'].keys()):
         src_target = os.path.join('./source',
                                   '{}.json'.format(
@@ -299,10 +304,10 @@ def source_json(meta, target):
                            properties={})
         
         item.common_metadata.start_datetime = start
-        item.common_metadata.end_datetime = stop
-        # item.common_metadata.created = datetime.strptime(meta['source'][uid]['processingDate'], '%Y-%m-%dT%H:%M:%S.%f')
+        item.common_metadata.end_datetime = stop 
+        item.common_metadata.created = meta['source'][uid]['processingDate']
         item.common_metadata.instruments = [meta['common']['instrumentShortName'].lower()]
-        item.common_metadata.constellation = meta['common']['constellation']
+        # item.common_metadata.constellation = meta['common']['constellation']
         item.common_metadata.platform = meta['common']['platformFullname']
         
         SarExtension.add_to(item)
@@ -319,15 +324,15 @@ def source_json(meta, target):
                       frequency_band=FrequencyBand[meta['common']['radarBand'].upper()],
                       polarizations=[Polarization[pol] for pol in meta['common']['polarisationChannels']],
                       product_type=meta['source'][uid]['productType'],
-        #               center_frequency=float(meta['common']['radarCenterFreq']),
+                      center_frequency=float(meta['common']['radarCenterFreq']),
         #               resolution_range=float(min(meta['source'][uid]['rangeResolution'].values())),
         #               resolution_azimuth=float(min(meta['source'][uid]['azimuthResolution'].values())),
                       pixel_spacing_range=float(meta['source'][uid]['rangePixelSpacing']),
                       pixel_spacing_azimuth=float(meta['source'][uid]['azimuthPixelSpacing']),
                       looks_range=int(meta['source'][uid]['rangeNumberOfLooks']),
-                      looks_azimuth=int(meta['source'][uid]['azimuthNumberOfLooks']))
+                      looks_azimuth=int(meta['source'][uid]['azimuthNumberOfLooks']),
         #               looks_equivalent_number=float(enl) if enl is not None else None,
-        #               observation_direction=ObservationDirection[meta['common']['antennaLookDirection']])
+                      observation_direction=ObservationDirection[meta['common']['antennaLookDirection']])
         
         sat_ext.apply(orbit_state=OrbitState[meta['common']['orbit'].upper()],
                       relative_orbit=meta['common']['orbitNumbers_rel'],
@@ -335,16 +340,18 @@ def source_json(meta, target):
         
         # view_ext.apply(incidence_angle=float(meta['source'][uid]['incidenceAngleMidSwath']),
         #                azimuth=float(meta['source'][uid]['instrumentAzimuthAngle']))
-        
+
+        item.properties['sensing_start'] = pystac.utils.datetime_to_str(meta['source'][uid]['sensingStart'])
+        item.properties['sensing_end'] =  pystac.utils.datetime_to_str(meta['source'][uid]['sensingStop']) 
         item.properties['processing:facility'] = meta['source'][uid]['processingCenter']
         item.properties['processing:software'] = {meta['source'][uid]['processorName']:
                                                   meta['source'][uid]['processorVersion']}
         item.properties['proj:shape'] = [meta['source'][uid]['lineLength'], meta['source'][uid]['lineTimeInterval']]
-        # item.properties['processing:level'] = meta['source'][uid]['processingLevel']
+        item.properties['processing:level'] = meta['source'][uid]['processingLevel']
         
         # item.properties['card4l:specification'] = meta['prod']['card4l-name']
         # item.properties['card4l:specification_version'] = meta['prod']['card4l-version']
-        # item.properties['card4l:beam_id'] = meta['source'][uid]['swathIdentifier']
+        item.properties['card4l:beam_id'] = meta['source'][uid]['swathIdentifier']
         item.properties['card4l:orbit_data_source'] = meta['source'][uid]['orbitDataSource']
         # item.properties['card4l:orbit_mean_altitude'] = float(meta['common']['orbitMeanAltitude'])
         # item.properties['card4l:source_processing_parameters'] = {'lut_applied': meta['source'][uid]['lutApplied'],
@@ -366,29 +373,33 @@ def source_json(meta, target):
         # item.properties['card4l:mean_faraday_rotation_angle'] = meta['source'][uid]['faradayMeanRotationAngle']
         # item.properties['card4l:ionosphere_indicator'] = meta['source'][uid]['ionosphereIndicator']
         
-        # item.add_link(link=pystac.Link(rel='card4l-document',
-        #                                target=meta['prod']['card4l-link'].replace('.pdf', '.docx'),
-        #                                media_type='application/vnd.openxmlformats-officedocument.wordprocessingml'
-        #                                           '.document',
-        #                                title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
-        #                                      ''.format(meta['prod']['card4l-version'])))
-        # item.add_link(link=pystac.Link(rel='card4l-document',
-        #                                target=meta['prod']['card4l-link'],
-        #                                media_type='application/pdf',
-        #                                title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
-        #                                      ''.format(meta['prod']['card4l-version'])))
+        item.add_link(link=pystac.Link(rel='card4l-document',
+                                       #    target=meta['prod']['card4l-link'].replace('.pdf', '.docx'),
+                                       target='https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.docx',
+                                       media_type='application/vnd.openxmlformats-officedocument.wordprocessingml'
+                                                  '.document',
+                                       title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
+                                             # ''.format(meta['prod']['card4l-version'])))
+                                             ''.format('5.5')))
+        item.add_link(link=pystac.Link(rel='card4l-document',
+                                       #    target=meta['prod']['card4l-link'],
+                                       target='https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.pdf',
+                                       media_type='application/pdf',
+                                       title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
+                                             # ''.format(meta['prod']['card4l-version'])))
+                                             ''.format('5.5')))
         # item.add_link(link=pystac.Link(rel='about',
         #                                target=meta['source'][uid]['doi'],
         #                                title='Product Definition Reference.'))
-        # item.add_link(link=pystac.Link(rel='access',
-        #                                target=meta['source'][uid]['access'],
-        #                                title='URL to data access information.'))
+        item.add_link(link=pystac.Link(rel='access',
+                                       target=meta['source'][uid]['access'],
+                                       title='URL to data access information.'))
         # item.add_link(link=pystac.Link(rel='satellite',
         #                                target=meta['common']['platformReference'],
         #                                title='CEOS Missions, Instruments and Measurements Database record'))
-        # item.add_link(link=pystac.Link(rel='state-vectors',
-        #                                target=meta['source'][uid]['orbitStateVector'],
-        #                                title='Orbit data file containing state vectors.'))
+        item.add_link(link=pystac.Link(rel='state-vectors',
+                                       target=meta['source'][uid]['orbitStateVector'],
+                                       title='Orbit data file containing state vectors.'))
         # item.add_link(link=pystac.Link(rel='sensor-calibration',
         #                                target=meta['source'][uid]['sensorCalibration'],
         #                                title='Reference describing sensor calibration parameters.'))
