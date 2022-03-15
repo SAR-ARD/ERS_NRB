@@ -54,13 +54,10 @@ def get_config(config_file, section_name='GENERAL'):
         if k == 'acq_mode':
             assert v in ['IW', 'EW', 'SM']
         if k == 'work_dir':
-            assert os.path.isdir(v), "Parameter '{}': Directory {} must be an existing directory".format(k, v)
+            assert os.path.isdir(v), "Parameter '{}': '{}' must be an existing directory".format(k, v)
         if k.endswith('_dir') and not k == 'work_dir':
             if any(x in v for x in ['/', '\\']):
-                assert os.path.isdir(v), "Parameter '{}': {} is a full path to a non-existing directory. Make sure " \
-                                         "the directory already exists OR provide a directory name (excluding any " \
-                                         "back- or forward slashes), which will automatically be created as a " \
-                                         "subdirectory of 'work_dir'".format(k, v)
+                assert os.path.isdir(v), "Parameter '{}': {} is a full path to a non-existing directory".format(k, v)
             else:
                 v = os.path.join(parser_sec['work_dir'], v)
                 os.makedirs(v, exist_ok=True)
@@ -73,8 +70,8 @@ def get_config(config_file, section_name='GENERAL'):
         if k == 'gdal_threads':
             v = int(v)
         if k == 'dem_type':
-            allowed = ['Copernicus 10m EEA DEM', 'Copernicus 30m Global DEM II', 'Copernicus 90m Global DEM II',
-                       'GETASSE30']
+            allowed = ['Copernicus 10m EEA DEM', 'Copernicus 30m Global DEM II',
+                       'Copernicus 30m Global DEM', 'GETASSE30']
             assert v in allowed, "Parameter '{}': expected to be one of {}; got '{}' instead".format(k, allowed, v)
         out_dict[k] = v
     
@@ -133,9 +130,9 @@ def geocode_conf(config):
     dict
         Dictionary of parameters that can be passed to `pyroSAR.snap.util.geocode`
     """
-    return {'tr': {'IW': 10,
-                   'SM': 10,
-                   'EW': 20}[config['acq_mode']],
+    return {'spacing': {'IW': 10,
+                        'SM': 10,
+                        'EW': 20}[config['acq_mode']],
             'scaling': 'linear',
             'groupsize': 1,
             'allow_RES_OSV': True,
@@ -148,7 +145,13 @@ def geocode_conf(config):
             'clean_edges': True,
             'clean_edges_npixels': 3,
             'test': False,
-            'cleanup': True}
+            'cleanup': True,
+            'rlks': {'IW': 5,
+                     'SM': 6,
+                     'EW': 3}[config['acq_mode']],
+            'azlks': {'IW': 1,
+                      'SM': 6,
+                      'EW': 1}[config['acq_mode']]}
 
 
 def gdal_conf(config):
