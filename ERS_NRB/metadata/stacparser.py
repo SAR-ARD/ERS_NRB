@@ -47,7 +47,7 @@ def product_json(meta, target, tifs):
     # item.common_metadata.start_datetime = start
     # item.common_metadata.end_datetime = stop
     # item.common_metadata.created = meta['prod']['timeCreated']
-    item.common_metadata.instruments = [meta['common']['instrumentShortName'].lower()]
+    item.common_metadata.instruments = [meta['common']['instrumentShortName']]
     # item.common_metadata.constellation = meta['common']['constellation']
     item.common_metadata.platform = meta['common']['platformFullname']
     # item.common_metadata.gsd = float(meta['prod']['pxSpacingColumn'])
@@ -81,7 +81,7 @@ def product_json(meta, target, tifs):
     
     # item.properties['processing:facility'] = meta['prod']['processingCenter']
     # item.properties['processing:software'] = {meta['prod']['processorName']: meta['prod']['processorVersion']}
-    # item.properties['processing:level'] = meta['prod']['processingLevel']
+    item.properties['processing:level'] = meta['prod']['processingLevel']
     
     # item.properties['card4l:specification'] = meta['prod']['card4l-name']
     # item.properties['card4l:specification_version'] = meta['prod']['card4l-version']
@@ -308,7 +308,7 @@ def source_json(meta, target):
         item.common_metadata.start_datetime = start
         item.common_metadata.end_datetime = stop 
         item.common_metadata.created = meta['source'][uid]['processingDate']
-        item.common_metadata.instruments = [meta['common']['instrumentShortName'].lower()]
+        item.common_metadata.instruments = [meta['common']['instrumentShortName']]
         # item.common_metadata.constellation = meta['common']['constellation']
         item.common_metadata.platform = meta['common']['platformFullname']
         

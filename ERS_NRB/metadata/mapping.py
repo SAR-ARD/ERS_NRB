@@ -61,7 +61,12 @@ RES_MAP = {'IW': {'azimuthResolution': {'IW1': '22.5',
 ORB_MAP = {'PD': 'predicted',
            'RS': 'restituted',
            'PC': 'precise',
-           'PL': 'preliminary'}
+           'PL': 'preliminary',
+           'FP': 'predicted',
+           'DN': 'navigator',
+           'FR': 'restituted',
+           'DI': 'preliminary',
+           'DP': 'precise'}
 # Envisat
 # FP = FOS predicted orbit state vectors (NRT processing)
 # DN = DORIS Level 0 navigator product acquired at PDHS (NRT)

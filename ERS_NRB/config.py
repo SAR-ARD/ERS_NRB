@@ -52,7 +52,7 @@ def get_config(config_file, section_name='GENERAL'):
         if k.endswith('date'):
             v = parser_sec.get_datetime(k)
         if k == 'acq_mode':
-            assert v in ['IW', 'EW', 'SM']
+            assert v in ['IMM', 'IMP', 'APP']
         if k == 'work_dir':
             assert os.path.isdir(v), "Parameter '{}': '{}' must be an existing directory".format(k, v)
         if k.endswith('_dir') and not k == 'work_dir':
@@ -130,9 +130,9 @@ def geocode_conf(config):
     dict
         Dictionary of parameters that can be passed to `pyroSAR.snap.util.geocode`
     """
-    return {'spacing': {'IW': 10,
-                        'SM': 10,
-                        'EW': 20}[config['acq_mode']],
+    return {'spacing': {'IMM': 10, # TODO Completly guess
+                        'IMP': 10, # TODO Completly guess
+                        'APP': 20}[config['acq_mode']], # TODO Completly guess
             'scaling': 'linear',
             'groupsize': 1,
             'allow_RES_OSV': True,
@@ -146,12 +146,12 @@ def geocode_conf(config):
             'clean_edges_npixels': 3,
             'test': False,
             'cleanup': True,
-            'rlks': {'IW': 5,
-                     'SM': 6,
-                     'EW': 3}[config['acq_mode']],
-            'azlks': {'IW': 1,
-                      'SM': 6,
-                      'EW': 1}[config['acq_mode']]}
+            'rlks': {'IMM': 5, # TODO Completly guess
+                     'IMP': 6, # TODO Completly guess
+                     'APP': 3}[config['acq_mode']], # TODO Completly guess
+            'azlks': {'IMM': 1, # TODO Completly guess
+                      'IMP': 6, # TODO Completly guess
+                      'APP': 1}[config['acq_mode']]} # TODO Completly guess
 
 
 def gdal_conf(config):

@@ -443,9 +443,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # Common metadata (sorted alphabetically)
     meta['common']['antennaLookDirection'] = 'RIGHT'
     # meta['common']['constellation'] = 'sentinel-1'
-    meta['common']['instrumentShortName'] = 'AMI'
 
-    # ENVISAT -> meta['common']['instrumentShortName'] = 'ASAR' 
 
     # meta['common']['operationalMode'] = prod_meta['mode']
 
@@ -462,15 +460,17 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # meta['common']['orbitNumbers_rel'] = sid0.meta['orbitNumber_rel']
     # meta['common']['orbitNumber_start'] = str(meta['common']['orbitNumber_abs']['start'])
     # meta['common']['orbitNumber_stop'] = str(meta['common']['orbitNumber_abs']['stop'])
-    meta['common']['platformIdentifier'] = {'ERS1': '1', 'ERS2': '2'}[sid0.sensor]
-    meta['common']['platformShortName'] = 'ERS'
-    meta['common']['platformFullname'] = '{}{}'.format(meta['common']['platformShortName'].lower(),
-                                                        meta['common']['platformIdentifier'].lower())
-    meta['common']['platformReference'] = {'ers1': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=575',
-                                           'ers2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576'}[meta['common']['platformFullname']]
+    meta['common']['platformFullname'] = {'ERS1': 'ERS1', 'ERS2': 'ERS2', 'ASAR': 'ENVISAT'}[sid0.sensor]    
+    meta['common']['instrumentShortName'] = {'ERS1': 'AMI', 'ERS2': 'AMI', 'ASAR': 'ASAR'}[sid0.sensor]
+
+    # meta['common']['platformShortName'] = 'ERS'
+    # meta['common']['platformFullname'] = '{}{}'.format(meta['common']['platformShortName'].lower(),
+    #                                                     meta['common']['platformIdentifier'].lower())
+    # meta['common']['platformReference'] = {'ers1': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=575',
+    #                                        'ers2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576'}[meta['common']['platformFullname']]
     meta['common']['polarisationChannels'] = sid0.polarizations
     # meta['common']['polarisationMode'] = prod_meta['pols']
-    meta['common']['radarBand'] = sid0.meta['MPH_PHASE']
+    meta['common']['radarBand'] = 'C'
     meta['common']['radarCenterFreq'] = '{:.3e}'.format(5300000000)
     meta['common']['sensorType'] = 'RADAR'
     
@@ -532,7 +532,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # meta['prod']['numPixelsPerLine'] = str(prod_meta['cols'])
     meta['prod']['pixelCoordinateConvention'] = 'pixel ULC'
     meta['prod']['processingCenter'] = 'FSU'
-    meta['prod']['processingLevel'] = 'L1C'
+    meta['prod']['processingLevel'] = 'Level 2'
     meta['prod']['processingMode'] = 'PROTOTYPE'
     meta['prod']['processorName'] = 'ERS_NRB'
     meta['prod']['processorVersion'] = '0.1'
@@ -637,7 +637,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
 
         meta['source'][uid]['processingDate'] = datetime.strptime(src_sid[uid].meta['MPH_PROC_TIME'], '%Y%m%dT%H%M%S')
         # meta['source'][uid]['processingLevel'] = src_xml[uid]['manifest'].find('.//safe:processing', nsmap).attrib['name']
-        meta['source'][uid]['processingLevel'] = 'TODO'
+        meta['source'][uid]['processingLevel'] = 'Level 1'
         # meta['source'][uid]['processorName'] = src_xml[uid]['manifest'].find('.//safe:software', nsmap).attrib['name']
         # meta['source'][uid]['processorVersion'] = src_xml[uid]['manifest'].find('.//safe:software', nsmap).attrib['version']
         try :

@@ -331,14 +331,18 @@ def main(config_file, section_name):
     
     ####################################################################################################################
     # archive / scene selection
-    scenes = finder(config['scene_dir'], [r'^SAR.*\.E[12]'], regex=True, recursive=True)
+    scenesERS = finder(config['scene_dir'], [r'^SAR.*\.E[12]'], regex=True, recursive=True)
+    scenesENVI = finder(config['scene_dir'], [r'^ASA.*\.N1'], regex=True, recursive=True)
+
+    scenes = scenesERS + scenesENVI
+
     if not os.path.isfile(config['db_file']):
         config['db_file'] = os.path.join(config['work_dir'], config['db_file'])
     
     with Archive(dbfile=config['db_file']) as archive:        
         archive.insert(scenes)
         selection = archive.select(product='PRI',
-                                   acquisition_mode='IMP',
+                                   acquisition_mode=config['acq_mode'],
                                    mindate=config['mindate'], maxdate=config['maxdate'])
     
     if len(selection) == 0:
@@ -373,9 +377,10 @@ def main(config_file, section_name):
     # geocode & noise power - SNAP processing
     np_dict = {'sigma0': 'NESZ', 'beta0': 'NEBZ', 'gamma0': 'NEGZ'}
     np_refarea = 'sigma0'
+    # for i, scene in enumerate(ids):
+    #     print(scene.meta)
     if snap_flag:
         for i, scene in enumerate(ids):
-            # print(scene.meta)
             dem_buffer = 200  # meters
             fname_dem = os.path.join(config['tmp_dir'], scene.outname_base() + '_DEM.tif')
             if not os.path.isfile(fname_dem):
@@ -415,18 +420,20 @@ def main(config_file, section_name):
                 print('### ' + msg)
                 log.info('[GEOCODE] -- {scene} -- {msg}'.format(scene=scene.scene, msg=msg))
             
-            print('###### [NOISE_P] Scene {s}/{s_total}: {scene}'.format(s=i+1, s_total=len(ids),
+            print('###### [NOISE_P] Scene {s}/{s_total}: {scene}'.format(s=i + 1, s_total=len(ids),
                                                                          scene=scene.scene))
             if len([item for item in list_processed if np_dict[np_refarea] in item]) == 0:
                 start_time = time.time()
                 try:
-                    noise_power(infile=scene.scene, outdir=config['out_dir'], polarizations=scene.polarizations,
-                                spacing=geocode_prms['tr'], t_srs=epsg, refarea=np_refarea, tmpdir=config['tmp_dir'],
-                                externalDEMFile=fname_dem, externalDEMApplyEGM=geocode_prms['externalDEMApplyEGM'],
+                    noise_power(infile=scene.scene, outdir=out_dir_scene, polarizations=scene.polarizations,
+                                spacing=geocode_prms['spacing'], refarea=np_refarea, tmpdir=tmp_dir_scene,
+                                externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, t_srs=epsg,
+                                externalDEMApplyEGM=geocode_prms['externalDEMApplyEGM'],
                                 alignToStandardGrid=geocode_prms['alignToStandardGrid'],
                                 standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
                                 clean_edges=geocode_prms['clean_edges'],
-                                clean_edges_npixels=geocode_prms['clean_edges_npixels'])
+                                clean_edges_npixels=geocode_prms['clean_edges_npixels'],
+                                rlks=geocode_prms['rlks'], azlks=geocode_prms['azlks'])
                     t = round((time.time() - start_time), 2)
                     log.info('[NOISE_P] -- {scene} -- {time}'.format(scene=scene.scene, time=t))
                 except Exception as e:
