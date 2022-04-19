@@ -38,39 +38,40 @@ def get_prod_meta(product_id, tif, src_scenes, src_dir):
     out = re.match(re.compile(NRB_PATTERN), product_id).groupdict()
     coord_list = [identify(src).meta['coordinates'] for src in src_scenes]
     
-    with vec_from_srccoords(coord_list=coord_list) as srcvec:
-        with Raster(tif) as ras:
-            vec = ras.bbox()
-            srs = vec.srs
-            out['extent'] = vec.extent
-            out['wkt'] = srs.ExportToWkt()
-            out['epsg'] = vec.getProjection(type='epsg')
-            out['rows'] = ras.rows
-            out['cols'] = ras.cols
-            out['res'] = ras.res
-            geo = ras.geo
-            out['transform'] = [geo['xres'], geo['rotation_x'], geo['xmin'],
-                                geo['rotation_y'], geo['yres'], geo['ymax']]
-            
-            vec.reproject(4326)
-            feat = vec.getFeatureByIndex(0)
-            geom = feat.GetGeometryRef()
-            point = geom.Centroid()
-            out['wkt_pt'] = point.ExportToWkt()
-            out['wkt_env'] = vec.convert2wkt(set3D=False)[0]
-            out['extent_4326'] = vec.extent
-            
-            # Calculate number of nodata border pixels based on source scene(s) footprint
-            ras_srcvec = rasterize(vectorobject=srcvec, reference=ras, burn_values=[1])
-            arr_srcvec = ras_srcvec.array()
-            out['nodata_borderpx'] = np.count_nonzero(np.isnan(arr_srcvec))
-        srcvec = None
+    if tif:
+        with vec_from_srccoords(coord_list=coord_list) as srcvec:
+            with Raster(tif) as ras:
+                vec = ras.bbox()
+                srs = vec.srs
+                out['extent'] = vec.extent
+                out['wkt'] = srs.ExportToWkt()
+                out['epsg'] = vec.getProjection(type='epsg')
+                out['rows'] = ras.rows
+                out['cols'] = ras.cols
+                out['res'] = ras.res
+                geo = ras.geo
+                out['transform'] = [geo['xres'], geo['rotation_x'], geo['xmin'],
+                                    geo['rotation_y'], geo['yres'], geo['ymax']]
+                
+                vec.reproject(4326)
+                feat = vec.getFeatureByIndex(0)
+                geom = feat.GetGeometryRef()
+                point = geom.Centroid()
+                out['wkt_pt'] = point.ExportToWkt()
+                out['wkt_env'] = vec.convert2wkt(set3D=False)[0]
+                out['extent_4326'] = vec.extent
+                
+                # Calculate number of nodata border pixels based on source scene(s) footprint
+                ras_srcvec = rasterize(vectorobject=srcvec, reference=ras, burn_values=[1])
+                arr_srcvec = ras_srcvec.array()
+                out['nodata_borderpx'] = np.count_nonzero(np.isnan(arr_srcvec))
+            srcvec = None
     
-    pat = 'S1[AB]__(IW|EW|S[1-6]{1})___(A|D)_[0-9]{8}T[0-9]{6}.+ML.+xml$'
-    wf_path = finder(src_dir, [pat], regex=True)[0]
-    wf = parse_recipe(wf_path)
-    out['ML_nRgLooks'] = wf['Multilook'].parameters['nRgLooks']
-    out['ML_nAzLooks'] = wf['Multilook'].parameters['nAzLooks']
+    # pat = 'ERS[12]|ASAR__(IW|EW|S[1-6]{1})___(A|D)_[0-9]{8}T[0-9]{6}.+ML.+xml$'
+    # wf_path = finder(src_dir, [pat], regex=True)[0]
+    # wf = parse_recipe(wf_path)
+    # out['ML_nRgLooks'] = wf['Multilook'].parameters['nRgLooks']
+    # out['ML_nAzLooks'] = wf['Multilook'].parameters['nAzLooks']
     
     return out
 
@@ -399,8 +400,9 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     
     product_id = os.path.basename(target)
     # tif = finder(target, ['[hv]{2}-g-lin.tif$'], regex=True)[0]
-    # prod_meta = get_prod_meta(product_id=product_id, tif=tif, src_scenes=src_scenes,
-    #                           src_dir=os.path.dirname(src_files[0]))
+    tif = None
+    prod_meta = get_prod_meta(product_id=product_id, tif=tif, src_scenes=src_scenes,
+                              src_dir=os.path.dirname(src_files[0]))
     
     src_sid = {}
     src_xml = {}
@@ -548,8 +550,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['timeCreated'] = proc_time
     # meta['prod']['timeCompletionFromAscendingNode'] = str(float(manifest0.find('.//s1:stopTimeANX', nsmap0).text))
     # meta['prod']['timeStartFromAscendingNode'] = str(float(manifest0.find('.//s1:startTimeANX', nsmap0).text))
-    # meta['prod']['timeStart'] = datetime.strptime(prod_meta['start'], '%Y%m%dT%H%M%S')
-    # meta['prod']['timeStop'] = datetime.strptime(prod_meta['stop'], '%Y%m%dT%H%M%S')
+    meta['prod']['timeStart'] = datetime.strptime(prod_meta['start'], '%Y%m%dT%H%M%S')
+    meta['prod']['timeStop'] = datetime.strptime(prod_meta['stop'], '%Y%m%dT%H%M%S')
     # meta['prod']['transform'] = prod_meta['transform']
     # meta['prod']['wrsLongitudeGrid'] = str(meta['common']['orbitNumbers_rel']['start'])
     

@@ -1,5 +1,5 @@
-NRB_PATTERN = r'^(?P<sensor>S1[AB])_' \
-              r'(?P<mode>IW|EW)_' \
+NRB_PATTERN = r'^(?P<sensor>ERS[12]|ASAR)_' \
+              r'(?P<mode>IMP|IMM|APP)_' \
               r'(?P<product>NRB)_' \
               r'(?P<resolution>_)' \
               r'(?P<processingLevel>1)' \

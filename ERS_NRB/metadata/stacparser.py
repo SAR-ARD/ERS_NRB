@@ -32,21 +32,21 @@ def product_json(meta, target, tifs):
     scene_id = os.path.basename(target)
     outname = os.path.join(target, '{}.json'.format(scene_id))
     
-    # start = meta['prod']['timeStart']
-    # stop = meta['prod']['timeStop']
-    # date = start + (stop - start)/2
+    start = meta['prod']['timeStart']
+    stop = meta['prod']['timeStop']
+    date = start + (stop - start)/2
     
     item = pystac.Item(id=scene_id,
                     #    geometry=meta['prod']['geom_stac_geometry_4326'],
                     #    bbox=meta['prod']['geom_stac_bbox_4326'],
-                    #    datetime=date,
+                    datetime=date,
                     geometry=None, bbox=None,datetime=datetime.now(),
                     properties={})
     
     # item.common_metadata.license = meta['prod']['licence']
-    # item.common_metadata.start_datetime = start
-    # item.common_metadata.end_datetime = stop
-    # item.common_metadata.created = meta['prod']['timeCreated']
+    item.common_metadata.start_datetime = start
+    item.common_metadata.end_datetime = stop
+    item.common_metadata.created = meta['prod']['timeCreated']
     item.common_metadata.instruments = [meta['common']['instrumentShortName']]
     # item.common_metadata.constellation = meta['common']['constellation']
     item.common_metadata.platform = meta['common']['platformFullname']
