@@ -40,7 +40,7 @@ def product_json(meta, target, tifs):
                     #    geometry=meta['prod']['geom_stac_geometry_4326'],
                     #    bbox=meta['prod']['geom_stac_bbox_4326'],
                     datetime=date,
-                    geometry=None, bbox=None,datetime=datetime.now(),
+                    geometry=None, bbox=None,
                     properties={})
     
     # item.common_metadata.license = meta['prod']['licence']

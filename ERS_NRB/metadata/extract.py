@@ -34,7 +34,6 @@ def get_prod_meta(product_id, tif, src_scenes, src_dir):
     dict
         A dictionary containing metadata for the product scene.
     """
-    
     out = re.match(re.compile(NRB_PATTERN), product_id).groupdict()
     coord_list = [identify(src).meta['coordinates'] for src in src_scenes]
     
@@ -402,7 +401,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # tif = finder(target, ['[hv]{2}-g-lin.tif$'], regex=True)[0]
     tif = None
     prod_meta = get_prod_meta(product_id=product_id, tif=tif, src_scenes=src_scenes,
-                              src_dir=os.path.dirname(src_files[0]))
+                            #   src_dir=os.path.dirname(src_files[0]))
+                            src_dir=None)
     
     src_sid = {}
     src_xml = {}

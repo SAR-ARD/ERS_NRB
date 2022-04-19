@@ -129,9 +129,8 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
             'stop': product_stop,
             'tile': tile,
             'id': 'ABCD'}
-    
-    skeleton = '{mission}_{mode}_NRB__1SDV_{start}_{stop}_{orbitnumber:06}_{datatake}_{tile}_{id}'
-    
+    skeleton = '{mission}_{mode}_NRB__1SDV_{start}_{stop}_{orbitnumber:06}_{datatake:06}_{tile}_{id}'
+
     nrbdir = os.path.join(outdir, skeleton.format(**meta))
     os.makedirs(nrbdir, exist_ok=True)
     
