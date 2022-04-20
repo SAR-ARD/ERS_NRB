@@ -672,9 +672,6 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         meta['source'][uid]['timeStart'] = datetime.strptime(src_sid[uid].start, '%Y%m%dT%H%M%S')
         meta['source'][uid]['timeStop'] = datetime.strptime(src_sid[uid].stop, '%Y%m%dT%H%M%S')
 
-        meta['source'][uid]['sensingStart'] = datetime.strptime(src_sid[uid].meta['sensing_start'], '%Y%m%dT%H%M%S')
-        meta['source'][uid]['sensingStop'] = datetime.strptime(src_sid[uid].meta['sensing_stop'], '%Y%m%dT%H%M%S')
-
         # meta['source'][uid]['swathIdentifier'] = re.search('_IW|EW|S[1-6]{1}_', os.path.basename(src_sid[uid].file)).group().replace('_', '')
         meta['source'][uid]['swathIdentifier'] = src_sid[uid].meta['SPH_SWATH']
         # meta['source'][uid]['swaths'] = swaths

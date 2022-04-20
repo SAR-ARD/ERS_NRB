@@ -115,11 +115,9 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
                            '\n{scenes}'.format(tile_id=tile, scenes=scenes))
     
     src_scenes = [i.scene for i in ids]
-    try:
-        product_start, product_stop = ancil.calc_product_start_stop(src_scenes=src_scenes, extent=extent, epsg=epsg)
-    except:
-        product_start = ids[0].meta['start']
-        product_stop = ids[0].meta['stop']
+
+    product_start = ids[0].meta['SPH_FIRST_LINE_TIME']
+    product_stop = ids[0].meta['SPH_LAST_LINE_TIME']
         
     meta = {'mission': ids[0].sensor,
             'mode': ids[0].meta['acquisition_mode'],

@@ -343,8 +343,6 @@ def source_json(meta, target):
         # view_ext.apply(incidence_angle=float(meta['source'][uid]['incidenceAngleMidSwath']),
         #                azimuth=float(meta['source'][uid]['instrumentAzimuthAngle']))
 
-        item.properties['sensing_start'] = pystac.utils.datetime_to_str(meta['source'][uid]['sensingStart'])
-        item.properties['sensing_end'] =  pystac.utils.datetime_to_str(meta['source'][uid]['sensingStop']) 
         item.properties['processing:facility'] = meta['source'][uid]['processingCenter']
         item.properties['processing:software'] = {meta['source'][uid]['processorName']:
                                                   meta['source'][uid]['processorVersion']}
