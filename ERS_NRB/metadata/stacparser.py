@@ -365,9 +365,9 @@ def source_json(meta, target):
         #     for k, v in meta['source'][uid][key].items():
         #         res[k] = float(v)
         #     item.properties[field] = res
-        # item.properties['card4l:source_geometry'] = meta['source'][uid]['dataGeometry']
-        # item.properties['card4l:incidence_angle_near_range'] = meta['source'][uid]['incidenceAngleMin']
-        # item.properties['card4l:incidence_angle_far_range'] = meta['source'][uid]['incidenceAngleMax']
+        item.properties['card4l:source_geometry'] = meta['source'][uid]['dataGeometry']
+        item.properties['card4l:incidence_angle_near_range'] = meta['source'][uid]['incidenceAngleMin']
+        item.properties['card4l:incidence_angle_far_range'] = meta['source'][uid]['incidenceAngleMax']
         # item.properties['card4l:noise_equivalent_intensity'] = meta['source'][uid]['perfEstimates']
         # item.properties['card4l:noise_equivalent_intensity_type'] = meta['source'][uid]['perfNoiseEquivalentIntensityType']
         # item.properties['card4l:mean_faraday_rotation_angle'] = meta['source'][uid]['faradayMeanRotationAngle']

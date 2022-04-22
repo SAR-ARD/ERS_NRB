@@ -10,7 +10,7 @@ from spatialist import Raster
 from spatialist.ancillary import finder
 from spatialist.vector import wkt2vector, bbox
 from spatialist.raster import rasterize
-from ERS_NRB.metadata.mapping import NRB_PATTERN, RES_MAP, ORB_MAP
+from ERS_NRB.metadata.mapping import NRB_PATTERN, RES_MAP, ORB_MAP, INCIDENCE_ANGLES
 
 
 def get_prod_meta(product_id, tif, src_scenes, src_dir):
@@ -251,6 +251,7 @@ def vec_from_srccoords(coord_list):
                                                                  c1_lon[0], c1_lat[0])
     else:  # len(coord_list) == 1
         c = coord_list[0]
+        print (c)
         lat = [c[0][1], c[1][1], c[2][1], c[3][1]]
         lon = [c[0][0], c[1][0], c[2][0], c[3][0]]
         
@@ -398,8 +399,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
             'common': {}}
     
     product_id = os.path.basename(target)
-    # tif = finder(target, ['[hv]{2}-g-lin.tif$'], regex=True)[0]
-    tif = None
+    tif = finder(target, ['[hv]{2}-g-lin.tif$'], regex=True)[0]
     prod_meta = get_prod_meta(product_id=product_id, tif=tif, src_scenes=src_scenes,
                             #   src_dir=os.path.dirname(src_files[0]))
                             src_dir=None)
@@ -416,8 +416,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # manifest0 = src_xml[src0]['manifest']
     # nsmap0 = src_xml[src0]['manifest'].nsmap
     
-    # stac_bbox_4326, stac_geometry_4326 = convert_spatialist_extent(extent=prod_meta['extent_4326'])
-    # stac_bbox_native = convert_spatialist_extent(extent=prod_meta['extent'])[0]
+    stac_bbox_4326, stac_geometry_4326 = convert_spatialist_extent(extent=prod_meta['extent_4326'])
+    stac_bbox_native = convert_spatialist_extent(extent=prod_meta['extent'])[0]
     
     dem_map = {'GETASSE30': {'url': 'https://step.esa.int/auxdata/dem/GETASSE30',
                              'ref': 'https://seadas.gsfc.nasa.gov/help-8.1.0/desktop/GETASSE30ElevationModel.html',
@@ -471,7 +471,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # meta['common']['platformReference'] = {'ers1': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=575',
     #                                        'ers2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576'}[meta['common']['platformFullname']]
     meta['common']['polarisationChannels'] = sid0.polarizations
-    # meta['common']['polarisationMode'] = prod_meta['pols']
+    meta['common']['polarisationMode'] = prod_meta['pols']
     meta['common']['radarBand'] = 'C'
     meta['common']['radarCenterFreq'] = '{:.3e}'.format(5300000000)
     meta['common']['sensorType'] = 'RADAR'
@@ -488,8 +488,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['card4l-link'] = 'https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.pdf'
     meta['prod']['card4l-name'] = 'NRB'
     meta['prod']['card4l-version'] = '5.5'
-    # meta['prod']['crsEPSG'] = str(prod_meta['epsg'])
-    # meta['prod']['crsWKT'] = prod_meta['wkt']
+    meta['prod']['crsEPSG'] = str(prod_meta['epsg'])
+    meta['prod']['crsWKT'] = prod_meta['wkt']
     # meta['prod']['datatakeID'] = manifest0.find('.//s1sarl1:missionDataTakeID', nsmap0).text
     meta['prod']['demEgmReference'] = dem_egm
     meta['prod']['demEgmResamplingMethod'] = 'bilinear'
@@ -517,21 +517,21 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['geoCorrAccuracyType'] = 'slant-range'
     meta['prod']['geoCorrAlgorithm'] = 'https://sentinel.esa.int/documents/247904/1653442/Guide-to-Sentinel-1-Geocoding.pdf'
     meta['prod']['geoCorrResamplingMethod'] = 'bilinear'
-    # meta['prod']['geom_stac_bbox_native'] = stac_bbox_native
-    # meta['prod']['geom_stac_bbox_4326'] = stac_bbox_4326
-    # meta['prod']['geom_stac_geometry_4326'] = stac_geometry_4326
-    # meta['prod']['geom_xml_center'] = re.search(r'\(([-*0-9 .,]+)\)', prod_meta['wkt_pt']).group(1)
-    # meta['prod']['geom_xml_envelope'] = re.search(r'\(([-*0-9 .,]+)\)', prod_meta['wkt_env']).group(1)
+    meta['prod']['geom_stac_bbox_native'] = stac_bbox_native
+    meta['prod']['geom_stac_bbox_4326'] = stac_bbox_4326
+    meta['prod']['geom_stac_geometry_4326'] = stac_geometry_4326
+    meta['prod']['geom_xml_center'] = re.search(r'\(([-*0-9 .,]+)\)', prod_meta['wkt_pt']).group(1)
+    meta['prod']['geom_xml_envelope'] = re.search(r'\(([-*0-9 .,]+)\)', prod_meta['wkt_env']).group(1)
     meta['prod']['griddingConventionURL'] = 'http://www.mgrs-data.org/data/documents/nga_mgrs_doc.pdf'
     meta['prod']['griddingConvention'] = 'Military Grid Reference System (MGRS)'
     meta['prod']['licence'] = None
     meta['prod']['majorCycleID'] = str(sid0.meta['cycleNumber'])
     meta['prod']['noiseRemovalApplied'] = True
     meta['prod']['noiseRemovalAlgorithm'] = 'https://doi.org/10.1109/tgrs.2018.2889381'
-    # meta['prod']['numberLines'] = str(prod_meta['rows'])
+    meta['prod']['numberLines'] = str(prod_meta['rows'])
     meta['prod']['numberOfAcquisitions'] = str(len(src_scenes))
-    # meta['prod']['numBorderPixels'] = prod_meta['nodata_borderpx']
-    # meta['prod']['numPixelsPerLine'] = str(prod_meta['cols'])
+    meta['prod']['numBorderPixels'] = prod_meta['nodata_borderpx']
+    meta['prod']['numPixelsPerLine'] = str(prod_meta['cols'])
     meta['prod']['pixelCoordinateConvention'] = 'pixel ULC'
     meta['prod']['processingCenter'] = 'FSU'
     meta['prod']['processingLevel'] = 'Level 2'
@@ -539,8 +539,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['processorName'] = 'ERS_NRB'
     meta['prod']['processorVersion'] = '0.1'
     meta['prod']['productName'] = 'NORMALISED RADAR BACKSCATTER'
-    # meta['prod']['pxSpacingColumn'] = str(prod_meta['res'][0])
-    # meta['prod']['pxSpacingRow'] = str(prod_meta['res'][1])
+    meta['prod']['pxSpacingColumn'] = str(prod_meta['res'][0])
+    meta['prod']['pxSpacingRow'] = str(prod_meta['res'][1])
     meta['prod']['radiometricAccuracyAbsolute'] = None
     meta['prod']['radiometricAccuracyRelative'] = None
     meta['prod']['radiometricAccuracyReference'] = None
@@ -552,16 +552,16 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # meta['prod']['timeStartFromAscendingNode'] = str(float(manifest0.find('.//s1:startTimeANX', nsmap0).text))
     meta['prod']['timeStart'] = datetime.strptime(prod_meta['start'], '%Y%m%dT%H%M%S')
     meta['prod']['timeStop'] = datetime.strptime(prod_meta['stop'], '%Y%m%dT%H%M%S')
-    # meta['prod']['transform'] = prod_meta['transform']
-    # meta['prod']['wrsLongitudeGrid'] = str(meta['common']['orbitNumbers_rel']['start'])
+    meta['prod']['transform'] = prod_meta['transform']
+    meta['prod']['wrsLongitudeGrid'] = str(meta['common']['orbitNumbers_rel'])
     
     # Source metadata
     for uid in list(src_sid.keys()):
         # nsmap = src_xml[uid]['manifest'].nsmap
         # osv = src_sid[uid].getOSV(returnMatch=True, osvType=['POE', 'RES'], useLocal=True)
         coords = src_sid[uid].meta['coordinates']
-        # xml_envelop, xml_center = convert_id_coordinates(coords=coords)
-        # stac_bbox, stac_geometry = convert_id_coordinates(coords=coords, stac=True)
+        xml_envelop, xml_center = convert_id_coordinates(coords=coords)
+        stac_bbox, stac_geometry = convert_id_coordinates(coords=coords, stac=True)
         # swaths = list(src_xml[uid]['annotation'].keys())
         
         # (sorted alphabetically)
@@ -595,15 +595,15 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         #                                  single=False, out_type='float')
         #     meta['source'][uid]['azimuthPixelSpacing'] = str(sum(list(tmp_out.values())) / len(list(tmp_out.values())))
         # meta['source'][uid]['azimuthResolution'] = RES_MAP[meta['common']['operationalMode']]['azimuthResolution']
-        meta['source'][uid]['dataGeometry'] = 'slant range'
+        meta['source'][uid]['dataGeometry'] = src_sid[uid].meta['image_geometry']
         meta['source'][uid]['doi'] = 'https://sentinel.esa.int/documents/247904/1877131/Sentinel-1-Product-Specification'
         meta['source'][uid]['faradayMeanRotationAngle'] = None
         meta['source'][uid]['faradayRotationReference'] = None
         meta['source'][uid]['filename'] = src_sid[uid].file
-        # meta['source'][uid]['geom_stac_bbox_4326'] = stac_bbox
-        # meta['source'][uid]['geom_stac_geometry_4326'] = stac_geometry
-        # meta['source'][uid]['geom_xml_center'] = xml_center
-        # meta['source'][uid]['geom_xml_envelop'] = xml_envelop
+        meta['source'][uid]['geom_stac_bbox_4326'] = stac_bbox
+        meta['source'][uid]['geom_stac_geometry_4326'] = stac_geometry
+        meta['source'][uid]['geom_xml_center'] = xml_center
+        meta['source'][uid]['geom_xml_envelop'] = xml_envelop
         # inc = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
         #                          pattern='.//geolocationGridPoint/incidenceAngle', out_type='float')
         # meta['source'][uid]['incidenceAngleMax'] = np.max(list(inc.values()))
@@ -623,7 +623,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         meta['source'][uid]['orbitDataSource'] = ORB_MAP[src_sid[uid].meta['MPH_VECTOR_SOURCE']]
         meta['source'][uid]['orbitDataAccess'] = 'https://scihub.copernicus.eu/gnss'
         np_files = [f for f in src_files if re.search('_NE[BGS]Z', f) is not None]
-        # meta['source'][uid]['perfEstimates'] = calc_performance_estimates(files=np_files, ref_tif=tif)
+        meta['source'][uid]['perfEstimates'] = calc_performance_estimates(files=np_files, ref_tif=tif)
         meta['source'][uid]['perfEquivalentNumberOfLooks'] = None
         #meta['source'][uid]['perfIndicatorsURL'] = 'https://sentinel.esa.int/documents/247904/2142675/Thermal-Denoising-of-Products-Generated-by-Sentinel-1-IPF'
         meta['source'][uid]['perfIntegratedSideLobeRatio'] = None
@@ -675,6 +675,9 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         # meta['source'][uid]['swathIdentifier'] = re.search('_IW|EW|S[1-6]{1}_', os.path.basename(src_sid[uid].file)).group().replace('_', '')
         meta['source'][uid]['swathIdentifier'] = src_sid[uid].meta['SPH_SWATH']
         # meta['source'][uid]['swaths'] = swaths
-    
+        meta['source'][uid]['incidenceAngleMax'] = INCIDENCE_ANGLES[meta['common']['operationalMode']][meta['source'][uid]['swathIdentifier']]['far']
+        meta['source'][uid]['incidenceAngleMin'] = INCIDENCE_ANGLES[meta['common']['operationalMode']][meta['source'][uid]['swathIdentifier']]['near']
+        meta['source'][uid]['incidenceAngleMidSwath'] =  meta['source'][uid]['incidenceAngleMax'] - \
+                                                        ( (meta['source'][uid]['incidenceAngleMax'] -  meta['source'][uid]['incidenceAngleMin']) / 2)
     # return meta, m_sid, m_src
     return meta
