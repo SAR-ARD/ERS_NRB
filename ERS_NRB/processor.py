@@ -378,8 +378,8 @@ def main(config_file, section_name):
     # geocode & noise power - SNAP processing
     np_dict = {'sigma0': 'NESZ', 'beta0': 'NEBZ', 'gamma0': 'NEGZ'}
     np_refarea = 'sigma0'
-    # for i, scene in enumerate(ids):
-    #     print(scene.meta)
+    for i, scene in enumerate(ids):
+        print(scene.meta)
     if snap_flag:
         for i, scene in enumerate(ids):
             dem_buffer = 200  # meters

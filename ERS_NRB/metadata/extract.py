@@ -10,7 +10,7 @@ from spatialist import Raster
 from spatialist.ancillary import finder
 from spatialist.vector import wkt2vector, bbox
 from spatialist.raster import rasterize
-from ERS_NRB.metadata.mapping import NRB_PATTERN, RES_MAP, ORB_MAP, INCIDENCE_ANGLES
+from ERS_NRB.metadata.mapping import NRB_PATTERN, RES_MAP, ORB_MAP
 
 
 def get_prod_meta(product_id, tif, src_scenes, src_dir):
@@ -36,7 +36,7 @@ def get_prod_meta(product_id, tif, src_scenes, src_dir):
     """
     out = re.match(re.compile(NRB_PATTERN), product_id).groupdict()
     coord_list = [identify(src).meta['coordinates'] for src in src_scenes]
-    
+    print(tif)
     if tif:
         with vec_from_srccoords(coord_list=coord_list) as srcvec:
             with Raster(tif) as ras:
@@ -468,8 +468,9 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # meta['common']['platformShortName'] = 'ERS'
     # meta['common']['platformFullname'] = '{}{}'.format(meta['common']['platformShortName'].lower(),
     #                                                     meta['common']['platformIdentifier'].lower())
-    # meta['common']['platformReference'] = {'ers1': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=575',
-    #                                        'ers2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576'}[meta['common']['platformFullname']]
+    meta['common']['platformReference'] = {'ERS1': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=575', # TODO Wrong
+                                           'ERS2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576',
+                                           'ENVISAT': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576'}[meta['common']['platformFullname']]
     meta['common']['polarisationChannels'] = sid0.polarizations
     meta['common']['polarisationMode'] = prod_meta['pols']
     meta['common']['radarBand'] = 'C'
@@ -594,7 +595,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         #                                  pattern='.//azimuthPixelSpacing',
         #                                  single=False, out_type='float')
         #     meta['source'][uid]['azimuthPixelSpacing'] = str(sum(list(tmp_out.values())) / len(list(tmp_out.values())))
-        # meta['source'][uid]['azimuthResolution'] = RES_MAP[meta['common']['operationalMode']]['azimuthResolution']
+        meta['source'][uid]['azimuthResolution'] = src_sid[uid].meta['azimuthResolution']
         meta['source'][uid]['dataGeometry'] = src_sid[uid].meta['image_geometry']
         meta['source'][uid]['doi'] = 'https://sentinel.esa.int/documents/247904/1877131/Sentinel-1-Product-Specification'
         meta['source'][uid]['faradayMeanRotationAngle'] = None
@@ -666,7 +667,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         #                                  pattern='.//rangePixelSpacing',
         #                                  single=False, out_type='float')
         #     meta['source'][uid]['rangePixelSpacing'] = str(sum(list(tmp_out.values())) / len(list(tmp_out.values())))
-        # meta['source'][uid]['rangeResolution'] = RES_MAP[meta['common']['operationalMode']]['rangeResolution']
+        meta['source'][uid]['rangeResolution'] = src_sid[uid].meta['rangeResolution']
         meta['source'][uid]['sensorCalibration'] = 'https://sentinel.esa.int/web/sentinel/technical-guides/sentinel-1-sar/sar-instrument/calibration'
         meta['source'][uid]['status'] = 'ARCHIVED'
         meta['source'][uid]['timeStart'] = datetime.strptime(src_sid[uid].start, '%Y%m%dT%H%M%S')
@@ -675,9 +676,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         # meta['source'][uid]['swathIdentifier'] = re.search('_IW|EW|S[1-6]{1}_', os.path.basename(src_sid[uid].file)).group().replace('_', '')
         meta['source'][uid]['swathIdentifier'] = src_sid[uid].meta['SPH_SWATH']
         # meta['source'][uid]['swaths'] = swaths
-        meta['source'][uid]['incidenceAngleMax'] = INCIDENCE_ANGLES[meta['common']['operationalMode']][meta['source'][uid]['swathIdentifier']]['far']
-        meta['source'][uid]['incidenceAngleMin'] = INCIDENCE_ANGLES[meta['common']['operationalMode']][meta['source'][uid]['swathIdentifier']]['near']
-        meta['source'][uid]['incidenceAngleMidSwath'] =  meta['source'][uid]['incidenceAngleMax'] - \
-                                                        ( (meta['source'][uid]['incidenceAngleMax'] -  meta['source'][uid]['incidenceAngleMin']) / 2)
+        meta['source'][uid]['incidenceAngleMax'] = src_sid[uid].meta['incidenceAngleMax']
+        meta['source'][uid]['incidenceAngleMin'] = src_sid[uid].meta['incidenceAngleMin']
+        meta['source'][uid]['incidenceAngleMidSwath'] =  src_sid[uid].meta['incidence']
     # return meta, m_sid, m_src
     return meta
