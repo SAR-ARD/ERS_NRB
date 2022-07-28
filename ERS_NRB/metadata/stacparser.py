@@ -77,7 +77,9 @@ def product_json(meta, target, tifs):
                    bbox=meta['prod']['geom_stac_bbox_native'],
                    shape=[int(meta['prod']['numPixelsPerLine']), int(meta['prod']['numberLines'])],
                    transform=meta['prod']['transform'])
-    
+
+    item.properties['processing:location'] = meta['prod']['location']
+
     item.properties['processing:facility'] = meta['prod']['processingCenter']
     item.properties['processing:software'] = {meta['prod']['processorName']: meta['prod']['processorVersion']}
     item.properties['processing:level'] = meta['prod']['processingLevel']
@@ -95,7 +97,7 @@ def product_json(meta, target, tifs):
                                                        'window_size_col': meta['prod']['filterWindowSizeCol'],
                                                        'window_size_line': meta['prod']['filterWindowSizeLine']}
     else:
-        item.properties['card4l:speckle_filtering'] = None
+        item.properties['card4l:speckle_filtering'] = "No"
     item.properties['card4l:noise_removal_applied'] = meta['prod']['noiseRemovalApplied']
     item.properties['card4l:conversion_eq'] = meta['prod']['backscatterConversionEq']
     item.properties['card4l:relative_radiometric_accuracy'] = meta['prod']['radiometricAccuracyRelative']
@@ -104,6 +106,8 @@ def product_json(meta, target, tifs):
     item.properties['card4l:dem_resampling_method'] = meta['prod']['demResamplingMethod']
     item.properties['card4l:egm_resampling_method'] = meta['prod']['demEgmResamplingMethod']
     item.properties['card4l:geometric_accuracy_type'] = meta['prod']['geoCorrAccuracyType']
+    item.properties['card4l:column_spacing'] = meta['prod']['columnSpacing']
+    item.properties['card4l:row_spacing'] = meta['prod']['rowSpacing']    
     for x in ['Northern', 'Eastern']:
         key = ['geoCorrAccuracy{}{}'.format(x, y) for y in ['STDev', 'Bias']]
         stddev = float(meta['prod'][key[0]]) if meta['prod'][key[0]] is not None else None
@@ -150,6 +154,9 @@ def product_json(meta, target, tifs):
     item.add_link(link=pystac.Link(rel='radiometric-terrain-correction',
                                    target=meta['prod']['RTCAlgorithm'],
                                    title='Reference to the Radiometric Terrain Correction algorithm details.'))
+    item.add_link(link=pystac.Link(rel='rtc-dem',
+                                   target=meta['prod']['demReference'],
+                                   title='The Digital Elevation Model used during Radiometric Terrain Correction'))                                   
     item.add_link(link=pystac.Link(rel='radiometric-accuracy',
                                    target=meta['prod']['radiometricAccuracyReference'],
                                    title='Reference describing the radiometric uncertainty of the product.'))
@@ -183,7 +190,10 @@ def product_json(meta, target, tifs):
                 pol = re.search('[vh]{2}', tif).group().lower()
                 created = datetime.fromtimestamp(os.path.getctime(tif)).isoformat()
                 extra_fields = {'created': created,
-                                'raster:bands': [{'nodata': 'NaN',
+                                'measurement_type': meta['prod']['backscatterMeasurement'],
+                                'backscatter_convention': meta['prod']['backscatterConvention'],
+                                'raster:bands': [{'unit':'natural',
+                                                'nodata': 'NaN',
                                                 'data_type': '{}{}'.format(meta['prod']['fileDataType'],
                                                                             meta['prod']['fileBitsPerSample']),
                                                 'bits_per_sample': int(meta['prod']['fileBitsPerSample'])}],
@@ -365,6 +375,8 @@ def source_json(meta, target):
         item.properties['card4l:source_geometry'] = meta['source'][uid]['dataGeometry']
         item.properties['card4l:incidence_angle_near_range'] = meta['source'][uid]['incidenceAngleMin']
         item.properties['card4l:incidence_angle_far_range'] = meta['source'][uid]['incidenceAngleMax']
+        item.properties['card4l:nesz_near'] = meta['source'][uid]['neszNear']
+        item.properties['card4l:nesz_far'] = meta['source'][uid]['neszFar']        
         item.properties['card4l:noise_equivalent_intensity'] = meta['source'][uid]['perfEstimates']
         item.properties['card4l:noise_equivalent_intensity_type'] = meta['source'][uid]['perfNoiseEquivalentIntensityType']
         item.properties['card4l:mean_faraday_rotation_angle'] = meta['source'][uid]['faradayMeanRotationAngle']
@@ -406,12 +418,12 @@ def source_json(meta, target):
                                        title='Reference describing the method used to derive the estimate for the mean'
                                              ' Faraday rotation angle.'))
         
-        xml_relpath = './' + os.path.relpath(outname.replace('.json', '.xml'), target).replace('\\', '/')
-        item.add_asset(key='card4l',
-                       asset=pystac.Asset(href=xml_relpath,
-                                          title='CARD4L XML Metadata File',
-                                          media_type=pystac.MediaType.XML,
-                                          roles=['metadata', 'card4l']))
+        # xml_relpath = './' + os.path.relpath(outname.replace('.json', '.xml'), target).replace('\\', '/')
+        # item.add_asset(key='card4l',
+        #                asset=pystac.Asset(href=xml_relpath,
+        #                                   title='CARD4L XML Metadata File',
+        #                                   media_type=pystac.MediaType.XML,
+        #                                   roles=['metadata', 'card4l']))
         print(outname)
         item.save_object(dest_href=outname)
 

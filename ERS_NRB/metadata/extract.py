@@ -40,11 +40,14 @@ def get_prod_meta(product_id, tif, src_scenes, src_dir):
     if tif:
         with vec_from_srccoords(coord_list=coord_list) as srcvec:
             with Raster(tif) as ras:
+                image = ras.raster.GetGeoTransform()
                 vec = ras.bbox()
                 srs = vec.srs
                 out['extent'] = vec.extent
                 out['wkt'] = srs.ExportToWkt()
                 out['epsg'] = vec.getProjection(type='epsg')
+                out['rowSpacing'] = image[5]
+                out['columnSpacing'] = image[1]
                 out['rows'] = ras.rows
                 out['cols'] = ras.cols
                 out['res'] = ras.res
@@ -479,7 +482,6 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     
     # Product metadata (sorted alphabetically)
     meta['prod']['access'] = None
-    meta['prod']['ancillaryData1'] = None
     meta['prod']['acquisitionType'] = 'NOMINAL'
     # meta['prod']['ascendingNodeDate'] = manifest0.find('.//s1:ascendingNodeTime', nsmap0).text
     # meta['prod']['azimuthNumberOfLooks'] = prod_meta['ML_nAzLooks']
@@ -500,6 +502,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['demType'] = dem_type
     meta['prod']['demURL'] = dem_url
     meta['prod']['doi'] = None
+    meta['prod']['ancillaryData1'] = meta['prod']['demReference']
     meta['prod']['ellipsoidalHeight'] = None
     meta['prod']['fileBitsPerSample'] = '32'
     meta['prod']['fileByteOrder'] = 'little-endian'
@@ -527,18 +530,21 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['griddingConvention'] = 'Military Grid Reference System (MGRS)'
     meta['prod']['licence'] = None
     meta['prod']['majorCycleID'] = str(sid0.meta['cycleNumber'])
-    meta['prod']['noiseRemovalApplied'] = True
+    meta['prod']['noiseRemovalApplied'] = False
     meta['prod']['noiseRemovalAlgorithm'] = 'https://doi.org/10.1109/tgrs.2018.2889381'
     meta['prod']['numberLines'] = str(prod_meta['rows'])
     meta['prod']['numberOfAcquisitions'] = str(len(src_scenes))
     meta['prod']['numBorderPixels'] = prod_meta['nodata_borderpx']
     meta['prod']['numPixelsPerLine'] = str(prod_meta['cols'])
+    meta['prod']['columnSpacing'] = str(prod_meta['columnSpacing'])
+    meta['prod']['rowSpacing'] = str(prod_meta['rowSpacing'])
     meta['prod']['pixelCoordinateConvention'] = 'pixel ULC'
-    meta['prod']['processingCenter'] = 'FSU'
+    meta['prod']['processingCenter'] = 'TBD'
+    meta['prod']['location'] = 'TBD'
     meta['prod']['processingLevel'] = 'Level 2'
     meta['prod']['processingMode'] = 'PROTOTYPE'
     meta['prod']['processorName'] = 'ERS_NRB'
-    meta['prod']['processorVersion'] = '0.1'
+    meta['prod']['processorVersion'] = 'TBD'
     meta['prod']['productName'] = 'NORMALISED RADAR BACKSCATTER'
     meta['prod']['pxSpacingColumn'] = str(prod_meta['res'][0])
     meta['prod']['pxSpacingRow'] = str(prod_meta['res'][1])
@@ -678,6 +684,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         # meta['source'][uid]['swaths'] = swaths
         meta['source'][uid]['incidenceAngleMax'] = src_sid[uid].meta['incidenceAngleMax']
         meta['source'][uid]['incidenceAngleMin'] = src_sid[uid].meta['incidenceAngleMin']
+        meta['source'][uid]['neszNear'] = src_sid[uid].meta['neszNear']
+        meta['source'][uid]['neszFar'] = src_sid[uid].meta['neszFar']
         meta['source'][uid]['incidenceAngleMidSwath'] =  src_sid[uid].meta['incidence']
     # return meta, m_sid, m_src
     return meta

@@ -71,7 +71,7 @@ def get_config(config_file, section_name='GENERAL'):
             v = int(v)
         if k == 'dem_type':
             allowed = ['Copernicus 10m EEA DEM', 'Copernicus 30m Global DEM II',
-                       'Copernicus 30m Global DEM', 'GETASSE30']
+                       'Copernicus 30m Global DEM', 'GETASSE30', "Copernicus 90m Global DEM II"]
             assert v in allowed, "Parameter '{}': expected to be one of {}; got '{}' instead".format(k, allowed, v)
         out_dict[k] = v
     
@@ -145,7 +145,7 @@ def geocode_conf(config):
             'clean_edges': True,
             'clean_edges_npixels': 3,
             'test': False,
-            'cleanup': True,
+            'cleanup': False,
             'rlks': {'IMM': 5, # TODO Completly guess
                      'IMP': 6, # TODO Completly guess
                      'APP': 3}[config['acq_mode']], # TODO Completly guess

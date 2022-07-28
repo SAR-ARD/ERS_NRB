@@ -10,6 +10,7 @@ from osgeo import gdal
 from spatialist import Raster, Vector, vectorize, boundary, bbox, intersect, rasterize
 from spatialist.ancillary import finder
 from spatialist.auxil import gdalwarp, gdalbuildvrt
+from rsgislib.imageutils import gdal_warp
 from pyroSAR import identify_many, Archive
 
 from pyroSAR.snap.util import geocode, noise_power
@@ -76,39 +77,48 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
                 for id in ids]
     if len(datasets) == 0:
         raise RuntimeError("No pyroSAR datasets were found in the directory '{}'".format(datadir))
-    
+    print(f"Directory: {datadir}")
+    print(f"Datasets: {datasets}")
     pattern = '[VH]{2}_gamma0-rtc'
     i = 0
     snap_dm_tile_overlap = []
-    # while i < len(datasets):
-    #     pols = [x for x in datasets[i] if re.search(pattern, os.path.basename(x))]
-        # snap_dm_ras = re.sub(pattern, 'datamask', pols[0])
-        # snap_dm_vec = snap_dm_ras.replace('.tif', '.gpkg')
+    while i < len(datasets):
+        pols = [x for x in datasets[i] if re.search(pattern, os.path.basename(x))]
+        print(f"pols: {pols}")
+        snap_dm_ras = re.sub(pattern, 'datamask', pols[0])
+        snap_dm_vec = snap_dm_ras.replace('.tif', '.gpkg')
         
-        # if not all([os.path.isfile(x) for x in [snap_dm_ras, snap_dm_vec]]):
-        #     with Raster(pols[0]) as ras:
-        #         arr = ras.array()
-        #         mask = ~np.isnan(arr)
-        #         with vectorize(target=mask, reference=ras) as vec:
-        #             with boundary(vec, expression="value=1") as bounds:
-        #                 if not os.path.isfile(snap_dm_ras):
-        #                     print('creating raster mask', i)
-        #                     rasterize(vectorobject=bounds, reference=ras, outname=snap_dm_ras)
-        #                 if not os.path.isfile(snap_dm_vec):
-        #                     print('creating vector mask', i)
-        #                     bounds.write(outfile=snap_dm_vec)
-        # with Vector(snap_dm_vec) as bounds:
-        #     with bbox(extent, epsg) as tile_geom:
-        #         inter = intersect(bounds, tile_geom)
-        #         if inter is None:
-        #             print('removing dataset', i)
-        #             del ids[i]
-        #             del datasets[i]
-        #         else:
-        #             # Add snap_dm_ras to list if it overlaps with the current tile
-        #             snap_dm_tile_overlap.append(snap_dm_ras)
-        #             i += 1
-        #             inter.close()
+        if not all([os.path.isfile(x) for x in [snap_dm_ras, snap_dm_vec]]):
+            with Raster(pols[0]) as ras:
+                arr = ras.array()
+                mask = ~np.isnan(arr)
+                with vectorize(target=mask, reference=ras) as vec:
+                    with boundary(vec, expression="value=1") as bounds:
+                        if not os.path.isfile(snap_dm_ras):
+                            print('creating raster mask', i)
+                            rasterize(vectorobject=bounds, reference=ras, outname=snap_dm_ras)
+                        if not os.path.isfile(snap_dm_vec):
+                            print('creating vector mask', i)
+                            bounds.write(outfile=snap_dm_vec)
+
+        # # We assume it intersects                            
+        # snap_dm_tile_overlap.append(snap_dm_ras)  
+        # i += 1    
+        print(f"Extent: {extent}")               
+        with Vector(snap_dm_vec) as bounds:
+            with bbox(extent, epsg) as tile_geom:
+                tile_geom.write(outfile=snap_dm_vec.replace('datamask', 'kml_file').replace('.gpkg', '.geojson'))
+                print(f"bounds: {bounds}, tile_geom: {tile_geom}")
+                inter = intersect(bounds, tile_geom)
+                if inter is None:
+                    print('removing dataset', i)
+                    del ids[i]
+                    del datasets[i]
+                else:
+                    # Add snap_dm_ras to list if it overlaps with the current tile
+                    snap_dm_tile_overlap.append(snap_dm_ras)
+                    i += 1
+                    inter.close()
     
     if len(ids) == 0:
         raise RuntimeError('None of the scenes overlap with the current tile {tile_id}: '
@@ -244,9 +254,12 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
             tree.write(source, pretty_print=True, xml_declaration=False, encoding='utf-8')
             
             snap_nodata = 0
-            gdalwarp(source, outname,
-                     options={'format': driver, 'outputBounds': bounds, 'srcNodata': snap_nodata, 'dstNodata': 'nan',
-                              'multithread': multithread, 'creationOptions': write_options[key]})
+            print(f"gdalwrap {source}, {outname}, {driver}, {bounds}, {snap_nodata}, {multithread}, {write_options[key]}")
+            # gdalwarp(source, outname,
+            #          options={'format': driver, 'outputBounds': bounds, 'srcNodata': snap_nodata, 'dstNodata': 'nan',
+            #                   'multithread': multithread, 'creationOptions': write_options[key]})
+            gdal_warp(source, outname, epsg, gdalformat=driver, use_multi_threaded=multithread, 
+                        options=write_options[key])
     
     proc_time = datetime.now()
     t = proc_time.isoformat().encode()
@@ -255,65 +268,70 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     os.rename(nrbdir, nrbdir_new)
     nrbdir = nrbdir_new
     
-    # if type(files[0]) == tuple:
-    #     files = [item for tup in files for item in tup]
-    # gs_path = finder(nrbdir, [r'gs\.tif$'], regex=True)[0]
-    # measure_paths = finder(nrbdir, ['[hv]{2}-g-lin.tif$'], regex=True)
+    if type(files[0]) == tuple:
+        files = [item for tup in files for item in tup]
+    gs_path = finder(nrbdir, [r'gs\.tif$'], regex=True)[0]
+    measure_paths = finder(nrbdir, ['[hv]{2}-g-lin.tif$'], regex=True)
     
-    ####################################################################################################################
+    ###################################################################################################################
     # log-scaled gamma nought & color composite
     log_vrts = []
-    # for item in measure_paths:
-    #     log = item.replace('lin.tif', 'log.vrt')
-    #     log_vrts.append(log)
-    #     if not os.path.isfile(log):
-    #         print(log)
-    #         ancil.vrt_pixfun(src=item, dst=log, fun='log10', scale=10,
-    #                          options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
+    for item in measure_paths:
+        log = item.replace('lin.tif', 'log.vrt')
+        log_vrts.append(log)
+        if not os.path.isfile(log):
+            print(log)
+            ancil.vrt_pixfun(src=item, dst=log, fun='log10', scale=10,
+                             options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
     
-    # cc_path = re.sub('[hv]{2}', 'cc', measure_paths[0]).replace('.tif', '.vrt')
-    # # cc_path = re.sub('[hv]{2}', 'cc', log_vrts[0])
-    # ancil.create_rgb_vrt(outname=cc_path, infiles=measure_paths, overviews=overviews,
-    #                      overview_resampling=ovr_resampling)
+    cc_path = re.sub('[hv]{2}', 'cc', measure_paths[0]).replace('.tif', '.vrt')
+    cc_path = re.sub('[hv]{2}', 'cc', log_vrts[0])
+    ancil.create_rgb_vrt(outname=cc_path, infiles=measure_paths, overviews=overviews,
+                         overview_resampling=ovr_resampling)
     
-    # ####################################################################################################################
-    # # Data mask
-    # if not config['dem_type'] == 'GETASSE30' and not os.path.isfile(wbm):
-    #     raise FileNotFoundError('External water body mask could not be found: {}'.format(wbm))
+    ###################################################################################################################
+    # Data mask
+    print(f"wbm {wbm}")
+    if not config['dem_type'] == 'GETASSE30' and not os.path.isfile(wbm):
+        raise FileNotFoundError('External water body mask could not be found: {}'.format(wbm))
     
-    # dm_path = gs_path.replace('-gs.tif', '-dm.tif')
-    # ancil.create_data_mask(outname=dm_path, valid_mask_list=snap_dm_tile_overlap, src_files=files,
-    #                        extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['layoverShadowMask'],
-    #                        overviews=overviews, overview_resampling=ovr_resampling, wbm=wbm)
+    dm_path = gs_path.replace('-gs.tif', '-dm.tif')
+    with Raster(wbm) as ras_wbm:
+        extent = ras_wbm.extent
+    ancil.create_data_mask(outname=dm_path, valid_mask_list=snap_dm_tile_overlap, src_files=files,
+                           extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['layoverShadowMask'],
+                           overviews=overviews, overview_resampling=ovr_resampling, wbm=wbm)
     
-    # ####################################################################################################################
-    # # Acquisition ID image
-    # ancil.create_acq_id_image(ref_tif=gs_path, valid_mask_list=snap_dm_tile_overlap, src_scenes=src_scenes,
-    #                           extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['acquisitionImage'],
-    #                           overviews=overviews)
+    ###################################################################################################################
+    # Acquisition ID image
+    with Raster(gs_path) as ras_gs:
+        extent = ras_gs.extent    
+    ancil.create_acq_id_image(ref_tif=gs_path, valid_mask_list=snap_dm_tile_overlap, src_scenes=src_scenes,
+                              extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['acquisitionImage'],
+                              overviews=overviews)
     
-    # ####################################################################################################################
-    # # sigma nought RTC
-    # for item in measure_paths:
-    #     sigma0_rtc_lin = item.replace('g-lin.tif', 's-lin.vrt')
-    #     sigma0_rtc_log = item.replace('g-lin.tif', 's-log.vrt')
+    ###################################################################################################################
+    # sigma nought RTC
+    for item in measure_paths:
+        sigma0_rtc_lin = item.replace('g-lin.tif', 's-lin.vrt')
+        sigma0_rtc_log = item.replace('g-lin.tif', 's-log.vrt')
         
-    #     if not os.path.isfile(sigma0_rtc_lin):
-    #         print(sigma0_rtc_lin)
-    #         ancil.vrt_pixfun(src=[item, gs_path], dst=sigma0_rtc_lin, fun='mul',
-    #                          options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
-    #         ancil.vrt_relpath(sigma0_rtc_lin)
+        if not os.path.isfile(sigma0_rtc_lin):
+            print(sigma0_rtc_lin)
+            ancil.vrt_pixfun(src=[item, gs_path], dst=sigma0_rtc_lin, fun='mul',
+                             options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
+            ancil.vrt_relpath(sigma0_rtc_lin)
         
-    #     if not os.path.isfile(sigma0_rtc_log):
-    #         print(sigma0_rtc_log)
-    #         ancil.vrt_pixfun(src=sigma0_rtc_lin, dst=sigma0_rtc_log, fun='log10', scale=10,
-    #                          options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
+        if not os.path.isfile(sigma0_rtc_log):
+            print(sigma0_rtc_log)
+            ancil.vrt_pixfun(src=sigma0_rtc_lin, dst=sigma0_rtc_log, fun='log10', scale=10,
+                             options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
     
     ####################################################################################################################
     # metadata
     nrb_tifs = finder(nrbdir, ['-[a-z]{2,3}.tif'], regex=True, recursive=True)
     meta = extract.meta_dict(config=config, target=nrbdir, src_scenes=src_scenes, src_files=files, proc_time=proc_time)
-    xmlparser.main(meta=meta, target=nrbdir, tifs=nrb_tifs)
+    # xmlparser.main(meta=meta, target=nrbdir, tifs=nrb_tifs)
     stacparser.main(meta=meta, target=nrbdir, tifs=nrb_tifs)
 
 
@@ -365,8 +383,9 @@ def main(config_file, section_name):
         raise RuntimeError('The AOI covers multiple UTM zones: {}\n '
                            'This is currently not supported. Please refine your AOI.'.format(list(epsg_set)))
     epsg = epsg_set.pop()
-    
-    dem_names = prepare_dem(id_list=ids, config=config, threads=gdal_prms['threads'], epsg=epsg,
+    print(f"EPSG: {epsg}")
+    # DEM disable
+    dem_names, wbm_names = prepare_dem(id_list=ids, config=config, threads=gdal_prms['threads'], epsg=epsg,
                             spacing=geocode_prms['spacing'], buffer=1.5)
     
     if config['dem_type'] == 'Copernicus 30m Global DEM':
@@ -378,12 +397,14 @@ def main(config_file, section_name):
     # geocode & noise power - SNAP processing
     np_dict = {'sigma0': 'NESZ', 'beta0': 'NEBZ', 'gamma0': 'NEGZ'}
     np_refarea = 'sigma0'
-    for i, scene in enumerate(ids):
-        print(scene.meta)
+    # for i, scene in enumerate(ids):
+    #     print(scene.meta)
     if snap_flag:
         for i, scene in enumerate(ids):
+            # DEM disable
             dem_buffer = 200  # meters
             fname_dem = os.path.join(config['tmp_dir'], scene.outname_base() + '_DEM.tif')
+            fname_wbm = os.path.join(config['tmp_dir'], scene.outname_base() + '_WBM.tif')
             if not os.path.isfile(fname_dem):
                 with scene.geometry() as footprint:
                     footprint.reproject(epsg)
@@ -393,8 +414,21 @@ def main(config_file, section_name):
                     extent['xmax'] += dem_buffer
                     extent['ymax'] += dem_buffer
                     with bbox(extent, epsg) as dem_box:
+                        print(f"dem_names[i] : {dem_names[i]}")
+                        print(f"fname_dem : {fname_dem}")
+                        if isinstance(dem_names[i], list) and len(dem_names[i]) == 1:
+                            print("Ups liust of one, let me fix it")
+                            dem_names[i] = dem_names[i][0]
                         with Raster(dem_names[i], list_separate=False)[dem_box] as dem_mosaic:
                             dem_mosaic.write(fname_dem, format='GTiff')
+                    with bbox(extent, epsg) as dem_box:
+                        print(f"wbm_names[i] : {wbm_names[i]}")
+                        print(f"fname_wbm : {fname_wbm}")
+                        if isinstance(wbm_names[i], list) and len(wbm_names[i]) == 1:
+                            print("Ups liust of one, let me fix it")
+                            wbm_names[i] = wbm_names[i][0]
+                        with Raster(wbm_names[i], list_separate=False)[dem_box] as dem_mosaic:
+                            dem_mosaic.write(fname_wbm, format='GTiff')                           
             
             list_processed = finder(config['out_dir'], [scene.start], regex=True, recursive=False)
             exclude = list(np_dict.values())
@@ -403,6 +437,9 @@ def main(config_file, section_name):
             if len([item for item in list_processed if not any(ex in item for ex in exclude)]) < 3:
                 start_time = time.time()
                 try:
+                    # geocode(infile=scene, outdir=config['out_dir'], t_srs=epsg, tmpdir=config['tmp_dir'],
+                    #         standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
+                    #         demName='SRTM 3Sec', externalDEMNoDataValue=ex_dem_nodata, **geocode_prms)
                     geocode(infile=scene, outdir=config['out_dir'], t_srs=epsg, tmpdir=config['tmp_dir'],
                             standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
                             externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, **geocode_prms)
@@ -423,27 +460,27 @@ def main(config_file, section_name):
             
             print('###### [NOISE_P] Scene {s}/{s_total}: {scene}'.format(s=i + 1, s_total=len(ids),
                                                                          scene=scene.scene))
-            if len([item for item in list_processed if np_dict[np_refarea] in item]) == 0:
-                start_time = time.time()
-                try:
-                    noise_power(infile=scene.scene, outdir=out_dir_scene, polarizations=scene.polarizations,
-                                spacing=geocode_prms['spacing'], refarea=np_refarea, tmpdir=tmp_dir_scene,
-                                externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, t_srs=epsg,
-                                externalDEMApplyEGM=geocode_prms['externalDEMApplyEGM'],
-                                alignToStandardGrid=geocode_prms['alignToStandardGrid'],
-                                standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
-                                clean_edges=geocode_prms['clean_edges'],
-                                clean_edges_npixels=geocode_prms['clean_edges_npixels'],
-                                rlks=geocode_prms['rlks'], azlks=geocode_prms['azlks'])
-                    t = round((time.time() - start_time), 2)
-                    log.info('[NOISE_P] -- {scene} -- {time}'.format(scene=scene.scene, time=t))
-                except Exception as e:
-                    log.error('[NOISE_P] -- {scene} -- {error}'.format(scene=scene.scene, error=e))
-                    continue
-            else:
-                msg = 'Already processed - Skip!'
-                print('### ' + msg)
-                log.info('[NOISE_P] -- {scene} -- {msg}'.format(scene=scene.scene, msg=msg))
+            # if len([item for item in list_processed if np_dict[np_refarea] in item]) == 0:
+            #     start_time = time.time()
+            #     try:
+            #         noise_power(infile=scene.scene, outdir=out_dir_scene, polarizations=scene.polarizations,
+            #                     spacing=geocode_prms['spacing'], refarea=np_refarea, tmpdir=tmp_dir_scene,
+            #                     externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, t_srs=epsg,
+            #                     externalDEMApplyEGM=geocode_prms['externalDEMApplyEGM'],
+            #                     alignToStandardGrid=geocode_prms['alignToStandardGrid'],
+            #                     standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
+            #                     clean_edges=geocode_prms['clean_edges'],
+            #                     clean_edges_npixels=geocode_prms['clean_edges_npixels'],
+            #                     rlks=geocode_prms['rlks'], azlks=geocode_prms['azlks'])
+            #         t = round((time.time() - start_time), 2)
+            #         log.info('[NOISE_P] -- {scene} -- {time}'.format(scene=scene.scene, time=t))
+            #     except Exception as e:
+            #         log.error('[NOISE_P] -- {scene} -- {error}'.format(scene=scene.scene, error=e))
+            #         continue
+            # else:
+            #     msg = 'Already processed - Skip!'
+            #     print('### ' + msg)
+            #     log.info('[NOISE_P] -- {scene} -- {msg}'.format(scene=scene.scene, msg=msg))
     
     ####################################################################################################################
     # NRB - final product generation
@@ -454,6 +491,9 @@ def main(config_file, section_name):
             outdir = os.path.join(config['out_dir'], tile)
             os.makedirs(outdir, exist_ok=True)
             wbm = os.path.join(config['wbm_dir'], config['dem_type'], '{}_WBM.tif'.format(tile))
+            # wbm = fname_wbm
+            print(f"wbm{wbm}")
+
             if not os.path.isfile(wbm):
                 wbm = None
             
@@ -468,7 +508,7 @@ def main(config_file, section_name):
                 # try:
                 nrb_processing(config=config, scenes=scenes, datadir=os.path.dirname(outdir), outdir=outdir,
                                 tile=tile, extent=geo_dict[tile]['ext'], epsg=epsg, wbm=wbm,
-                                multithread=gdal_prms['multithread'])
+                                multithread=gdal_prms['multithread'], compress='LZW')
                 log.info('[    NRB] -- {scenes} -- {time}'.format(scenes=scenes,
                                                                 time=round((time.time() - start_time), 2)))
                 # except Exception as e:
@@ -519,27 +559,33 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
     
     fname_wbm_tmp = os.path.join(wbm_dir, 'mosaic_{}.vrt'.format(ext_id))
     fname_dem_tmp = os.path.join(dem_dir, 'mosaic_{}.vrt'.format(ext_id))
+    os.makedirs(dem_dir, exist_ok=True)
+    os.makedirs(wbm_dir, exist_ok=True)
+
     if config['dem_type'] in wbm_dems:
         if not os.path.isfile(fname_wbm_tmp) or not os.path.isfile(fname_dem_tmp):
             username = os.environ.get('FTP_USER')
             password = os.environ.get('FTP_PASS')
-        os.makedirs(wbm_dir, exist_ok=True)
         if not os.path.isfile(fname_wbm_tmp):
             dem_autoload(boxes, demType=config['dem_type'],
                          vrt=fname_wbm_tmp, buffer=buffer, product='wbm',
                          username=username, password=password,
                          nodata=1, hide_nodata=True)
-    os.makedirs(dem_dir, exist_ok=True)
     if not os.path.isfile(fname_dem_tmp):
         dem_autoload(boxes, demType=config['dem_type'],
                      vrt=fname_dem_tmp, buffer=buffer, product='dem',
                      username=username, password=password)
     
     dem_names = []
+    wbm_names = []
     for scene in id_list:
         dem_names_scene = []
+        wbm_names_scene = []
+
         with scene.bbox() as box:
+            print(f"Corners: {scene.getCorners()}")
             tiles = tile_ex.tiles_from_aoi(vectorobject=box, kml=config['kml_file'], epsg=epsg)
+            print(f"Tiles: {tiles}")
             print('### creating DEM tiles for scene: {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
                                                                               tiles=tiles))
             for i, tilename in enumerate(tiles):
@@ -548,26 +594,38 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
                 if not os.path.isfile(dem_tile):
                     with tile_ex.extract_tile(config['kml_file'], tilename) as tile:
                         ext = tile.extent
+                        # ext = scene.getCorners()
                         bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
                         dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
                                    geoid_convert=True, geoid=geoid, pbar=True,
                                    outputBounds=bounds, threads=threads)
+                        # dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
+                        #            geoid_convert=True, geoid=geoid, pbar=True,
+                        #            threads=threads)                        
             if os.path.isfile(fname_wbm_tmp):
                 print('### creating WBM tiles for scene {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
                                                                                  tiles=tiles))
                 for i, tilename in enumerate(tiles):
                     wbm_tile = os.path.join(wbm_dir, '{}_WBM.tif'.format(tilename))
+                    wbm_names_scene.append(wbm_tile)
+
                     if not os.path.isfile(wbm_tile):
                         with tile_ex.extract_tile(config['kml_file'], tilename) as tile:
                             ext = tile.extent
+                            # ext = scene.getCorners()
                             bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
                             dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
                                        resampling_method='mode', pbar=True,
                                        outputBounds=bounds, threads=threads)
+                            # dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
+                            #            resampling_method='mode', pbar=True,
+                            #            threads=threads)                            
         dem_names.append(dem_names_scene)
+        wbm_names.append(wbm_names_scene)
+
     boxes = None  # make sure all bounding box Vector objects are deleted
     
-    return dem_names
+    return dem_names, wbm_names
 
 if __name__ == '__main__':
     print('Main')

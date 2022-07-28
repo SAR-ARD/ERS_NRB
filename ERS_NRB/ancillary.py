@@ -12,6 +12,7 @@ from osgeo import gdal
 from scipy.interpolate import griddata
 import spatialist
 from spatialist import gdalbuildvrt, Raster, bbox
+from rsgislib.imageutils import create_mosaic_images_vrt
 import pyroSAR
 from pyroSAR import identify, finder, examine
 from ERS_NRB.metadata.extract import get_uid_sid, etree_from_sid, find_in_annotation
@@ -376,13 +377,15 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
 
     tile_bounds = [extent['xmin'], extent['ymin'], extent['xmax'], extent['ymax']]
     
-    vrt_snap_ls = '/vsimem/' + os.path.dirname(outname) + 'snap_ls.vrt'
-    vrt_snap_valid = '/vsimem/' + os.path.dirname(outname) + 'snap_valid.vrt'
-    vrt_snap_gamma0 = '/vsimem/' + os.path.dirname(outname) + 'snap_gamma0.vrt'
+    vrt_snap_ls = os.path.dirname(outname) + '/snap_ls.vrt'
+    vrt_snap_valid = os.path.dirname(outname) + '/snap_valid.vrt'
+    vrt_snap_gamma0 = os.path.dirname(outname) + '/snap_gamma0.vrt'
     gdalbuildvrt(snap_ls_mask, vrt_snap_ls, options={'outputBounds': tile_bounds}, void=False)
     gdalbuildvrt(valid_mask_list, vrt_snap_valid, options={'outputBounds': tile_bounds}, void=False)
     gdalbuildvrt(snap_gamma0, vrt_snap_gamma0, options={'outputBounds': tile_bounds}, void=False)
-    
+    print(f"vrt_snap_ls: {vrt_snap_ls}")
+    print(f"snap_ls_mask: {snap_ls_mask}")
+
     with Raster(vrt_snap_ls) as ras_snap_ls:
         with bbox(extent, crs=epsg) as tile_vec:
             rows = ras_snap_ls.rows
@@ -394,6 +397,9 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
             # Add Water Body Mask
             if wbm is not None:
                 with Raster(wbm) as ras_wbm:
+                    print(f"ras_wbm: {ras_wbm}")
+                    print(f"ras_snap_ls: {ras_snap_ls}")
+
                     arr_wbm = ras_wbm.array()
                     out_arr = np.where((arr_wbm == 1), 4, arr_snap_dm)
                     del arr_wbm
@@ -418,7 +424,8 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
         if out_format == 'multi-layer':
             outname_tmp = '/vsimem/' + os.path.basename(outname) + '.vrt'
             gdriver = gdal.GetDriverByName('GTiff')
-            ds_tmp = gdriver.Create(outname_tmp, rows, cols, len(dm_bands.keys()), gdal.GDT_Byte,
+            print(f"len(dm_bands.keys()): {len(dm_bands.keys())}")
+            ds_tmp = gdriver.Create(outname_tmp, cols, rows, len(dm_bands.keys()), gdal.GDT_Byte,
                                     options=['ALPHA=UNSPECIFIED', 'PHOTOMETRIC=MINISWHITE'])
             gdriver = None
             ds_tmp.SetGeoTransform(geotrans)
@@ -426,6 +433,7 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
             
             for k, v in dm_bands.items():
                 band = ds_tmp.GetRasterBand(k)
+                print(f"band: {band.XSize}x{band.YSize}")
                 arr_val = v['arr_val']
                 b_name = v['name']
                 
@@ -439,6 +447,7 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
                     arr[out_arr == 4] = 1
                 
                 arr = arr.astype('uint8')
+                print(f"arr: {arr.shape}x{arr.dtype}")
                 band.WriteArray(arr)
                 band.SetNoDataValue(out_nodata)
                 band.SetDescription(b_name)
@@ -529,6 +538,8 @@ def create_acq_id_image(ref_tif, valid_mask_list, src_scenes, extent, epsg, driv
     creation_opt.append('TIFFTAG_IMAGEDESCRIPTION={}'.format(tag))
     
     with Raster(ref_tif) as ref_ras:
+        print(f"ref_ras: {ref_ras}")
+        print(f"out_arr: {out_arr.shape}")
         ref_ras.write(outname, format=driver, array=out_arr.astype('uint8'), nodata=out_nodata, overwrite=True,
                       overviews=overviews, options=creation_opt)
 
