@@ -141,7 +141,6 @@ def create_rgb_vrt(outname, infiles, overviews, overview_resampling):
     -------
     None
     """
-    print(outname)
     
     # make sure order is right and VV polarization is first
     paths_reorder = []
@@ -160,11 +159,11 @@ def create_rgb_vrt(outname, infiles, overviews, overview_resampling):
     bands = tree.findall('VRTRasterBand')
     
     new_band = etree.SubElement(root, 'VRTRasterBand',
-                                attrib={'dataType': 'Float32', 'band': '3', 'subClass': 'VRTDerivedRasterBand'})
+                                attrib={'dataType': 'Float32', 'band': str(len(bands)), 'subClass': 'VRTDerivedRasterBand'})
     vrt_nodata = etree.SubElement(new_band, 'NoDataValue')
     vrt_nodata.text = 'nan'
-    new_band.insert(1, deepcopy(bands[0].find('ComplexSource')))
-    new_band.insert(2, deepcopy(bands[1].find('ComplexSource')))
+    for i, band in enumerate(bands, start=1):
+        new_band.insert(i, deepcopy(band.find('ComplexSource')))
     # pxfun_type = etree.SubElement(new_band, 'PixelFunctionType')
     # pxfun_type.text = 'diff'
     pxfun_language = etree.SubElement(new_band, 'PixelFunctionLanguage')
@@ -351,7 +350,6 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
     -------
     None
     """
-    print(outname)
     out_nodata = 255
     
     if out_format is None:
@@ -376,15 +374,12 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
                     'name': 'ocean water'}}
 
     tile_bounds = [extent['xmin'], extent['ymin'], extent['xmax'], extent['ymax']]
-    
     vrt_snap_ls = os.path.dirname(outname) + '/snap_ls.vrt'
     vrt_snap_valid = os.path.dirname(outname) + '/snap_valid.vrt'
     vrt_snap_gamma0 = os.path.dirname(outname) + '/snap_gamma0.vrt'
     gdalbuildvrt(snap_ls_mask, vrt_snap_ls, options={'outputBounds': tile_bounds}, void=False)
     gdalbuildvrt(valid_mask_list, vrt_snap_valid, options={'outputBounds': tile_bounds}, void=False)
     gdalbuildvrt(snap_gamma0, vrt_snap_gamma0, options={'outputBounds': tile_bounds}, void=False)
-    print(f"vrt_snap_ls: {vrt_snap_ls}")
-    print(f"snap_ls_mask: {snap_ls_mask}")
 
     with Raster(vrt_snap_ls) as ras_snap_ls:
         with bbox(extent, crs=epsg) as tile_vec:
@@ -397,8 +392,6 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
             # Add Water Body Mask
             if wbm is not None:
                 with Raster(wbm) as ras_wbm:
-                    print(f"ras_wbm: {ras_wbm}")
-                    print(f"ras_snap_ls: {ras_snap_ls}")
 
                     arr_wbm = ras_wbm.array()
                     out_arr = np.where((arr_wbm == 1), 4, arr_snap_dm)
@@ -407,7 +400,7 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
                 out_arr = arr_snap_dm
                 dm_bands.pop(4)
             del arr_snap_dm
-            
+        
             # Extend the shadow class of the data mask with nodata values from backscatter data and create final array
             with Raster(vrt_snap_valid)[tile_vec] as ras_snap_valid:
                 with Raster(vrt_snap_gamma0)[tile_vec] as ras_snap_gamma0:
@@ -420,11 +413,11 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
                     out_arr[np.isnan(arr_snap_valid)] = out_nodata
                     del arr_snap_gamma0
                     del arr_snap_valid
+
         
         if out_format == 'multi-layer':
             outname_tmp = '/vsimem/' + os.path.basename(outname) + '.vrt'
             gdriver = gdal.GetDriverByName('GTiff')
-            print(f"len(dm_bands.keys()): {len(dm_bands.keys())}")
             ds_tmp = gdriver.Create(outname_tmp, cols, rows, len(dm_bands.keys()), gdal.GDT_Byte,
                                     options=['ALPHA=UNSPECIFIED', 'PHOTOMETRIC=MINISWHITE'])
             gdriver = None
@@ -433,7 +426,6 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
             
             for k, v in dm_bands.items():
                 band = ds_tmp.GetRasterBand(k)
-                print(f"band: {band.XSize}x{band.YSize}")
                 arr_val = v['arr_val']
                 b_name = v['name']
                 
@@ -495,7 +487,6 @@ def create_acq_id_image(ref_tif, valid_mask_list, src_scenes, extent, epsg, driv
     None
     """
     outname = ref_tif.replace('-gs.tif', '-id.tif')
-    print(outname)
     out_nodata = 255
     
     # If there are two source scenes, make sure that the order in the relevant lists is correct!
@@ -538,8 +529,6 @@ def create_acq_id_image(ref_tif, valid_mask_list, src_scenes, extent, epsg, driv
     creation_opt.append('TIFFTAG_IMAGEDESCRIPTION={}'.format(tag))
     
     with Raster(ref_tif) as ref_ras:
-        print(f"ref_ras: {ref_ras}")
-        print(f"out_arr: {out_arr.shape}")
         ref_ras.write(outname, format=driver, array=out_arr.astype('uint8'), nodata=out_nodata, overwrite=True,
                       overviews=overviews, options=creation_opt)
 
@@ -642,7 +631,6 @@ def _log_process_config(logger, config):
     PROCESSING CONFIGURATION
     
     mode = {config['mode']}
-    aoi_tiles = {config['aoi_tiles']}
     aoi_geometry = {config['aoi_geometry']}
     mindate = {config['mindate'].isoformat()}
     maxdate = {config['maxdate'].isoformat()}
@@ -655,7 +643,6 @@ def _log_process_config(logger, config):
     dem_dir = {config['dem_dir']}
     wbm_dir = {config['wbm_dir']}
     db_file = {config['db_file']}
-    kml_file = {config['kml_file']}
     dem_type = {config.get('dem_type')}
     
     ====================================================================================================================

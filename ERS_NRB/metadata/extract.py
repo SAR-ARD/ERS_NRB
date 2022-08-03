@@ -536,8 +536,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['numberOfAcquisitions'] = str(len(src_scenes))
     meta['prod']['numBorderPixels'] = prod_meta['nodata_borderpx']
     meta['prod']['numPixelsPerLine'] = str(prod_meta['cols'])
-    meta['prod']['columnSpacing'] = str(prod_meta['columnSpacing'])
-    meta['prod']['rowSpacing'] = str(prod_meta['rowSpacing'])
+    meta['prod']['columnSpacing'] = prod_meta['columnSpacing']
+    meta['prod']['rowSpacing'] = prod_meta['rowSpacing']
     meta['prod']['pixelCoordinateConvention'] = 'pixel ULC'
     meta['prod']['processingCenter'] = 'TBD'
     meta['prod']['location'] = 'TBD'
@@ -554,7 +554,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # meta['prod']['rangeNumberOfLooks'] = prod_meta['ML_nRgLooks']
     meta['prod']['RTCAlgorithm'] = 'https://doi.org/10.1109/Tgrs.2011.2120616'
     meta['prod']['status'] = 'PROTOTYPE'
-    meta['prod']['timeCreated'] = proc_time
+    meta['prod']['timeCreated'] = datetime.strptime(proc_time.strftime('%Y%m%dT%H%M%S'), '%Y%m%dT%H%M%S')
     # meta['prod']['timeCompletionFromAscendingNode'] = str(float(manifest0.find('.//s1:stopTimeANX', nsmap0).text))
     # meta['prod']['timeStartFromAscendingNode'] = str(float(manifest0.find('.//s1:startTimeANX', nsmap0).text))
     meta['prod']['timeStart'] = datetime.strptime(prod_meta['start'], '%Y%m%dT%H%M%S')

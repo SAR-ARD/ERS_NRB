@@ -43,9 +43,9 @@ def get_config(config_file, section_name='GENERAL'):
             allowed = ['nrb', 'snap', 'all']
             assert v in allowed, "Parameter '{}': expected to be one of {}; got '{}' instead".format(k, allowed, v)
             v = v.lower()
-        if k == 'aoi_tiles':
-            if v is not None:
-                v = parser_sec.get_tile_list(k)
+        # if k == 'aoi_tiles':
+        #     if v is not None:
+        #         v = parser_sec.get_tile_list(k)
         if k == 'aoi_geometry':
             if v is not None:
                 assert os.path.isfile(v), "Parameter '{}': File {} could not be found".format(k, v)
@@ -75,7 +75,7 @@ def get_config(config_file, section_name='GENERAL'):
             assert v in allowed, "Parameter '{}': expected to be one of {}; got '{}' instead".format(k, allowed, v)
         out_dict[k] = v
     
-    assert any([out_dict[k] is not None for k in ['aoi_tiles', 'aoi_geometry']])
+    # assert any([out_dict[k] is not None for k in ['aoi_tiles', 'aoi_geometry']])
     
     return out_dict
 

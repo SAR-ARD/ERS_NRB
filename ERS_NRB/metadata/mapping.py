@@ -8,8 +8,7 @@ NRB_PATTERN = r'^(?P<sensor>ERS[12]|ASAR)_' \
               r'(?P<start>[0-9]{8}T[0-9]{6})_' \
               r'(?P<stop>[0-9]{8}T[0-9]{6})_' \
               r'(?P<orbitNumber>[0-9]{6})_' \
-              r'(?P<dataTakeID>[0-9A-F]{6})_' \
-              r'(?P<mgrsTile>[0-9A-Z]{5})'
+              r'(?P<dataTakeID>[0-9A-F]{6})'
 
 SRC_PATTERN = r'^(?P<sensor>S1[AB])_' \
               r'(?P<mode>IW|EW|S[1-6]{1})_' \
@@ -96,7 +95,7 @@ SAMPLE_MAP = {'-dm.tif': {'type': 'mask',
                           'role': 'local-incidence-angle',
                           'title': 'Local Incidence Angle'},
               '-gs.tif': {'type': 'ratio',
-                          'unit': None,
+                          'unit': 'ratio',
                           'role': 'gamma-sigma-ratio',
                           'title': 'Gamma0 RTC to sigma0 RTC ratio'},
               '-id.tif': {'type': 'mask',

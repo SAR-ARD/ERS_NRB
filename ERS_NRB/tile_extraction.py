@@ -107,27 +107,25 @@ def main(config, spacing):
         `standardGridOriginY` parameters of `pyroSAR.snap.util.geocode`
     """
     
-    if config['aoi_tiles'] is not None:
-        tiles = config['aoi_tiles']
-    elif config['aoi_tiles'] is None and config['aoi_geometry'] is not None:
-        with Vector(config['aoi_geometry']) as aoi:
-            tiles = tiles_from_aoi(aoi, kml=config['kml_file'])
+    if config['aoi_geometry'] is not None:
+        with Vector(config['aoi_geometry']) as aoi:           
+            tiles =  [x.name for x in aoi.getfeatures()]
+            geo_dict = {}
+            for tile in tiles:            
+                ext = aoi.extent
+                epsg = aoi.getProjection('epsg')
+                xmax = ext['xmax'] - spacing / 2
+                ymin = ext['ymin'] + spacing / 2
+                geo_dict[tile] = {'ext': ext,
+                                'epsg': epsg,
+                                'xmax': xmax,
+                                'ymin': ymin}
+        
+            align_dict = {'xmax': max([geo_dict[tile]['xmax'] for tile in list(geo_dict.keys())]),
+                        'ymin': min([geo_dict[tile]['ymin'] for tile in list(geo_dict.keys())])}
+            
+            return geo_dict, align_dict            
     else:
-        raise RuntimeError("Either 'aoi_tiles' or 'aoi_geometry' need to be provided!")
+        raise RuntimeError("'aoi_geometry' need to be provided!")
     
-    geo_dict = {}
-    for tile in tiles:
-        with extract_tile(kml=config['kml_file'], tile=tile) as vec:
-            ext = vec.extent
-            epsg = vec.getProjection('epsg')
-            xmax = ext['xmax'] - spacing / 2
-            ymin = ext['ymin'] + spacing / 2
-            geo_dict[tile] = {'ext': ext,
-                              'epsg': epsg,
-                              'xmax': xmax,
-                              'ymin': ymin}
     
-    align_dict = {'xmax': max([geo_dict[tile]['xmax'] for tile in list(geo_dict.keys())]),
-                  'ymin': min([geo_dict[tile]['ymin'] for tile in list(geo_dict.keys())])}
-    
-    return geo_dict, align_dict
