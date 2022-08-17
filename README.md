@@ -1,29 +1,11 @@
-# ERS-NRB prototype processor
-This is a changed version for ERS from the S1 version you can find in https://github.com/SAR-ARD/S1_NRB 
-## Installation
+<h1 align="center">
+  <br>
+  <a>ERS_NRB</a>
+</h1>
+<h3 align="center">A prototype processor for the ASAR and ERS Normalised Radar Backscatter product</h3>
 
-- Install and then activate conda environment: 
-```bash
-conda env create --file environment.yaml
-conda activate nrb_env
-```
+Please refer to the [Documentation](https://ers-nrb.readthedocs.io/en/latest/) for more details about installation and 
+usage instructions, general processor information and the API reference. (Not public at the moment)
 
-- Install this package into the environment:
-```bash
-pip install .
-```
-
-## Usage
-
-- Create a config file (see `config.ini` for an example) and store it in your project directory
-- Print a help message using:
-```bash
-ers_nrb --help
-```
-
-- Start the processor using parameters defined in a config file:
-```bash
-ers_nrb -c /path/to/your/config.ini
-```
- A description of individual steps can be found [here](https://github.com/SAR-ARD/ERS_NRB/blob/main/ERS_NRB.rst).
- 
+Further information about the ERS-NRB product can also be found [here](https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.pdf)
+).

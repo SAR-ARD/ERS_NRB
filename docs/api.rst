@@ -1,0 +1,105 @@
+API Documentation
+=================
+
+
+Configuration
+-------------
+
+.. automodule:: ERS_NRB.config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. autosummary::
+        :nosignatures:
+
+        gdal_conf
+        geocode_conf
+        get_config
+
+Processing
+----------
+
+.. automodule:: ERS_NRB.processor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. autosummary::
+        :nosignatures:
+
+        main
+        prepare_dem
+        nrb_processing
+
+Ancillary Functions
+-------------------
+
+.. automodule:: ERS_NRB.ancillary
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. autosummary::
+        :nosignatures:
+
+        generate_unique_id
+        get_max_ext
+        log
+        set_logging
+
+Metadata
+--------
+
+Extraction
+^^^^^^^^^^
+
+.. automodule:: ERS_NRB.metadata.extract
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. autosummary::
+        :nosignatures:
+
+        calc_geolocation_accuracy
+        calc_performance_estimates
+        etree_from_sid
+        extract_pslr_islr
+        find_in_annotation
+        geometry_from_vec
+        get_header_size
+        get_prod_meta
+        meta_dict
+        vec_from_srccoords
+
+XML
+^^^
+
+.. automodule:: ERS_NRB.metadata.xml
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. autosummary::
+        :nosignatures:
+
+        parse
+        product_xml
+        source_xml
+
+STAC
+^^^^
+
+.. automodule:: ERS_NRB.metadata.stac
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. autosummary::
+        :nosignatures:
+
+        parse
+        product_json
+        source_json
+        make_catalog

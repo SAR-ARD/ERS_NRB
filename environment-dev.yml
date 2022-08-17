@@ -1,0 +1,17 @@
+name: nrb_env_dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.8
+  - gdal>=3.5.0
+  - click
+  - lxml
+  - pystac
+  - scipy
+  - sphinx
+  - sphinxcontrib-bibtex>=2.2
+  - nbsphinx
+  - sphinx_rtd_theme
+  - pip:
+    - pyroSAR @ git+https://github.com/SAR-ARD/pyroSAR.git
