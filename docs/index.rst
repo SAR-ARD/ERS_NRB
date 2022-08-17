@@ -10,6 +10,5 @@ Further information about this product can be found
 
    general/index.rst
    api.rst
-   examples/index.rst
    about/index.rst
    tocs.rst

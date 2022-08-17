@@ -1,35 +1,12 @@
 ERS_NRB Production
 =================
 
-The following describes the current workflow for producing the Sentinel-1 Normalised Radar Backscatter product (ERS_NRB), which is being developed in study 1 of the COPA project.
+The following describes the current workflow for producing the ASAR/ERS Normalised Radar Backscatter product (ERS_NRB), which is being developed in study 1 of the COPA project.
 This is not part of the official pyroSAR documentation.
 However, as pyroSAR is the foundation of the processor, its documentation is used to outline the processor details to conveniently link to all relevant functionality.
 
 
-The basis of the processing chain builds the Sentinel-2 Military Grid Reference System (MGRS) tiling system.
-Hence, a reference file is needed containing the respective tile information for processing ERS_NRB products.
-A KML file is available online that will be used in the following steps:
-
-https://sentinel.esa.int/documents/247904/1955685/S2A_OPER_GIP_TILPAR_MPC__20151209T095117_V20150622T000000_21000101T000000_B00.kml
-
-This file contains all relevant information about individual tiles, in particular the EPSG code of the respective UTM zone and the geometry of the tile in UTM coordinates.
-The code snippet below demonstrates the tile reading mechanism (using class :class:`spatialist.vector.Vector` and function :func:`spatialist.vector.wkt2vector`):
-
-.. code-block:: python
-
-    from lxml import html
-    from spatialist.vector import Vector, wkt2vector
-
-    def extract_tile(kml, tile):
-        with Vector(kml, driver='KML') as vec:
-            feat = vec.getFeatureByAttribute('Name', tile)
-            attrib = html.fromstring(feat.GetField('Description')
-            attrib = [x for x in attrib.xpath('//tr/td//text()') if x != ' ']
-            attrib = dict(zip(attrib[0::2], attrib[1::2]))
-            feat = None
-        return wkt2vector(attrib['UTM_WKT'], int(attrib['EPSG']))
-
-The S1 images are managed in a local SQLite database to select scenes for processing (see pyroSAR's section on `Database Handling`_).
+The ASAR/ERS images are managed in a local SQLite database to select scenes for processing (see pyroSAR's section on `Database Handling`_).
 
 After loading an MGRS tile as an :class:`spatialist.vector.Vector` object and selecting all relevant overlapping scenes
 from the database, processing can commence.
@@ -39,7 +16,7 @@ generate radiometrically terrain corrected gamma naught backscatter plus all rel
 local incident angle and local contribution area (see argument ``export_extra``).
 
 The code below presents an incomplete call to :func:`pyroSAR.snap.util.geocode` where several variables have been set implicitly.
-``infile`` can either be  a single Sentinel-1 scene or multiple, which will then be mosaiced in radar geometry prior to geocoding.
+``infile`` can either be  a single ASAR/ERS scene or multiple, which will then be mosaiced in radar geometry prior to geocoding.
 ``vec`` is the :class:`spatialist.vector.Vector` object
 created from the S2 KML file with corner coordinate (``xmax``, ``ymin``). The resulting image tiles are aligned to this corner coordinate.
 
@@ -70,7 +47,7 @@ Alternative to the auto-download options, a custom DEM can be passed to :func:`p
 The function :func:`pyroSAR.auxdata.dem_create` can be used to directly convert between EGM96 and WGS84 heights using GDAL.
 This way, the argument ``externalDEMApplyEGM`` of function :func:`pyroSAR.snap.util.geocode` can be set to ``False`` and no additional lookup file is needed.
 
-Sentinel-1 orbit state vector files (OSV) for enhancing the orbit location accuracy are downloaded directly by pyroSAR (see :class:`pyroSAR.S1.OSV`), but can also be downloaded automatically by SNAP.
+ASAR/ERS orbit state vector files (OSV) for enhancing the orbit location accuracy can be downloaded automatically by SNAP.
 For ERS_NRB processing at least Restituted Orbit files (RESORB) are needed while the more accurate Precise Orbit Ephemerides (POEORB) delivered two weeks after scene acquisition do not provide additional benefit.
 
 The function :func:`pyroSAR.snap.util.geocode` will create a list of plain GeoTIFF files, which are slightly larger than the actual tile to ensure full tile coverage after geocoding.

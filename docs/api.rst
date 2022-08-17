@@ -73,25 +73,10 @@ Extraction
         meta_dict
         vec_from_srccoords
 
-XML
-^^^
-
-.. automodule:: ERS_NRB.metadata.xml
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-    .. autosummary::
-        :nosignatures:
-
-        parse
-        product_xml
-        source_xml
-
 STAC
 ^^^^
 
-.. automodule:: ERS_NRB.metadata.stac
+.. automodule:: ERS_NRB.metadata.stacparser
     :members:
     :undoc-members:
     :show-inheritance:
@@ -99,7 +84,5 @@ STAC
     .. autosummary::
         :nosignatures:
 
-        parse
         product_json
         source_json
-        make_catalog
