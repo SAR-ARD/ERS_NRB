@@ -350,6 +350,17 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
     -------
     None
     """
+    # print(f"outname: {outname}")
+    # print(f"valid_mask_list: {valid_mask_list}")
+    # print(f"src_files: {src_files}")
+    # print(f"extent: {extent}")
+    # print(f"epsg: {epsg}")
+    # print(f"driver: {driver}")
+    # print(f"creation_opt: {creation_opt}")
+    # print(f"overviews: {overviews}")
+    # print(f"overview_resampling: {overview_resampling}")
+    # print(f"out_format: {out_format}")
+    # print(f"wbm: {wbm}")
     out_nodata = 255
     
     if out_format is None:
@@ -419,7 +430,7 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
             outname_tmp = '/vsimem/' + os.path.basename(outname) + '.vrt'
             gdriver = gdal.GetDriverByName('GTiff')
             ds_tmp = gdriver.Create(outname_tmp, cols, rows, len(dm_bands.keys()), gdal.GDT_Byte,
-                                    options=['ALPHA=UNSPECIFIED', 'PHOTOMETRIC=MINISWHITE'])
+                                    options=['ALPHA=UNSPECIFIED', 'PHOTOMETRIC=MINISWHITE', 'BIGTIFF=YES'])
             gdriver = None
             ds_tmp.SetGeoTransform(geotrans)
             ds_tmp.SetProjection(proj)
@@ -439,7 +450,6 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
                     arr[out_arr == 4] = 1
                 
                 arr = arr.astype('uint8')
-                print(f"arr: {arr.shape}x{arr.dtype}")
                 band.WriteArray(arr)
                 band.SetNoDataValue(out_nodata)
                 band.SetDescription(b_name)

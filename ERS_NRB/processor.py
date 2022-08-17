@@ -575,7 +575,7 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
                         bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
                         dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
                                    geoid_convert=True, geoid=geoid, pbar=True,
-                                   outputBounds=bounds, threads=threads)
+                                   outputBounds=bounds, threads=threads, nodata=-32767)
                         # dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
                         #            geoid_convert=True, geoid=geoid, pbar=True,
                         #            threads=threads)                        
@@ -593,7 +593,7 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
                             bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
                             dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
                                        resampling_method='mode', pbar=True,
-                                       outputBounds=bounds, threads=threads)
+                                       outputBounds=bounds, threads=threads, nodata=-32767)
                             # dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
                             #            resampling_method='mode', pbar=True,
                             #            threads=threads)                            

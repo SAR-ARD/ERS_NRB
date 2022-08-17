@@ -74,7 +74,7 @@ ORB_MAP = {'PD': 'predicted',
 # DP = DORIS precise orbit If not used, set to ØØ.           
 
 SAMPLE_MAP = {'-dm.tif': {'type': 'mask',
-                          'unit': None,
+                          'unit': 'mask',
                           'role': 'data-mask',
                           'title': 'Data Mask Image',
                           'values': {0: 'not layover, nor shadow',

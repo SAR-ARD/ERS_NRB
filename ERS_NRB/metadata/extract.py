@@ -517,9 +517,9 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['geoCorrAccuracyNorthernBias'] = None
     meta['prod']['geoCorrAccuracyNorthernSTDev'] = None
     meta['prod']['geoCorrAccuracy_rRMSE'] = None
-    meta['prod']['geoCorrAccuracyReference'] = 'https://www.mdpi.com/2072-4292/9/6/607'
+    meta['prod']['geoCorrAccuracyReference'] = 'TBD'
     meta['prod']['geoCorrAccuracyType'] = 'slant-range'
-    meta['prod']['geoCorrAlgorithm'] = 'https://sentinel.esa.int/documents/247904/1653442/Guide-to-Sentinel-1-Geocoding.pdf'
+    meta['prod']['geoCorrAlgorithm'] = 'TBD'
     meta['prod']['geoCorrResamplingMethod'] = 'bilinear'
     meta['prod']['geom_stac_bbox_native'] = stac_bbox_native
     meta['prod']['geom_stac_bbox_4326'] = stac_bbox_4326
