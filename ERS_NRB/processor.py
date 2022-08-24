@@ -338,7 +338,7 @@ def main(config_file, section_name):
     scenesENVI = finder(config['scene_dir'], [r'^ASA.*\.N1'], regex=True, recursive=True)
 
     scenes = scenesERS + scenesENVI
-
+    print(f"scenes: {scenes}")
     if not os.path.isfile(config['db_file']):
         config['db_file'] = os.path.join(config['work_dir'], config['db_file'])
     

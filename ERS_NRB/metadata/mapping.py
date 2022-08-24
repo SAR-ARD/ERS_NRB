@@ -118,3 +118,4 @@ SAMPLE_MAP = {'-dm.tif': {'type': 'mask',
                              'unit': None,
                              'role': 'noise-power',
                              'title': 'Noise Power HV'}}
+     

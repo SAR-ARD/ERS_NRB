@@ -52,7 +52,7 @@ def get_config(config_file, section_name='GENERAL'):
         if k.endswith('date'):
             v = parser_sec.get_datetime(k)
         if k == 'acq_mode':
-            assert v in ['IMM', 'IMP', 'APP']
+            assert v in ['IMM', 'IMP', 'APP', 'IMS', 'WSM']
         if k == 'work_dir':
             assert os.path.isdir(v), "Parameter '{}': '{}' must be an existing directory".format(k, v)
         if k.endswith('_dir') and not k == 'work_dir':
@@ -132,7 +132,9 @@ def geocode_conf(config):
     """
     return {'spacing': {'IMM': 10, # TODO Completly guess
                         'IMP': 10, # TODO Completly guess
-                        'APP': 20}[config['acq_mode']], # TODO Completly guess
+                        'APP': 20, # TODO Completly guess
+                        'IMS': 20, # TODO Completly guess
+                        'WSM': 20,}[config['acq_mode']], # TODO Completly guess
             'scaling': 'linear',
             'groupsize': 1,
             'allow_RES_OSV': True,
@@ -148,10 +150,14 @@ def geocode_conf(config):
             'cleanup': False,
             'rlks': {'IMM': 5, # TODO Completly guess
                      'IMP': 6, # TODO Completly guess
-                     'APP': 3}[config['acq_mode']], # TODO Completly guess
+                     'APP': 3, # TODO Completly guess
+                     'IMS': 6, # TODO Completly guess
+                     'WSM': 3}[config['acq_mode']], # TODO Completly guess
             'azlks': {'IMM': 1, # TODO Completly guess
                       'IMP': 6, # TODO Completly guess
-                      'APP': 1}[config['acq_mode']]} # TODO Completly guess
+                      'APP': 1, # TODO Completly guess
+                      'IMS': 1, # TODO Completly guess
+                      'WSM': 1}[config['acq_mode']]} # TODO Completly guess
 
 
 def gdal_conf(config):

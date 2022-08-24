@@ -108,7 +108,7 @@ def product_json(meta, target, tifs):
     item.properties['card4l:geometric_accuracy_type'] = meta['prod']['geoCorrAccuracyType']
     item.properties['card4l:column_spacing'] = meta['prod']['columnSpacing']
     item.properties['card4l:row_spacing'] = meta['prod']['rowSpacing']    
-    for x in ['Northern', 'Eastern']:
+    for x in ['Azimuth', 'Range']:
         key = ['geoCorrAccuracy{}{}'.format(x, y) for y in ['STDev', 'Bias']]
         stddev = float(meta['prod'][key[0]]) if meta['prod'][key[0]] is not None else None
         bias = float(meta['prod'][key[1]]) if meta['prod'][key[1]] is not None else None
@@ -212,7 +212,8 @@ def product_json(meta, target, tifs):
                 key = re.search('-[a-z]{2}(?:-[a-z]{2}|).tif', tif).group()
                 
                 if key in ['-dm.tif', '-id.tif']:
-                    ras_bands_base = {'nodata': 255,
+                    ras_bands_base = {"unit": "mask",
+                                    'nodata': 255,
                                     'data_type': 'uint8',
                                     'bits_per_sample': 8}
                     raster_bands = []

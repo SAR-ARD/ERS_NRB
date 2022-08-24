@@ -5,15 +5,15 @@ from lxml import etree
 from datetime import datetime
 import numpy as np
 from pyroSAR import identify
-from pyroSAR.snap.auxil import parse_recipe
+from pyroSAR.ERS.mapping import ANGLES_RESOLUTION
 from spatialist import Raster
 from spatialist.ancillary import finder
 from spatialist.vector import wkt2vector, bbox
 from spatialist.raster import rasterize
-from ERS_NRB.metadata.mapping import NRB_PATTERN, RES_MAP, ORB_MAP
+from ERS_NRB.metadata.mapping import NRB_PATTERN, ORB_MAP
 
 
-def get_prod_meta(product_id, tif, src_scenes, src_dir):
+def get_prod_meta(product_id, tif, src_scenes):
     """
     Returns a metadata dictionary, which is generated from the ID of a product scene using a regular expression pattern
     and from a measurement GeoTIFF file of the same product scene using spatialist's Raster class.
@@ -26,9 +26,6 @@ def get_prod_meta(product_id, tif, src_scenes, src_dir):
         The paths to a measurement GeoTIFF file of the product scene.
     src_scenes: list[str]
         A list of paths pointing to the source scenes of the product.
-    src_dir: str
-        A paths pointing to the SNAP processed datasets of the product.
-    
     Returns
     -------
     dict
@@ -403,16 +400,12 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     
     product_id = os.path.basename(target)
     tif = finder(target, ['[hv]{2}-g-lin.tif$'], regex=True)[0]
-    prod_meta = get_prod_meta(product_id=product_id, tif=tif, src_scenes=src_scenes,
-                            #   src_dir=os.path.dirname(src_files[0]))
-                            src_dir=None)
+    prod_meta = get_prod_meta(product_id=product_id, tif=tif, src_scenes=src_scenes)
     
     src_sid = {}
-    src_xml = {}
     for i in range(len(src_scenes)):
         uid, sid = get_uid_sid(filepath=src_scenes[i])
         src_sid[uid] = sid
-        # src_xml[uid] = etree_from_sid(sid=sid)
     
     src0 = list(src_sid.keys())[0]  # first key/first file
     sid0 = src_sid[src0]
@@ -471,9 +464,9 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # meta['common']['platformShortName'] = 'ERS'
     # meta['common']['platformFullname'] = '{}{}'.format(meta['common']['platformShortName'].lower(),
     #                                                     meta['common']['platformIdentifier'].lower())
-    meta['common']['platformReference'] = {'ERS1': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=575', # TODO Wrong
-                                           'ERS2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576',
-                                           'ENVISAT': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=576'}[meta['common']['platformFullname']]
+    meta['common']['platformReference'] = {'ERS1': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=220',
+                                           'ERS2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=221',
+                                           'ENVISAT': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=2'}[meta['common']['platformFullname']]
     meta['common']['polarisationChannels'] = sid0.polarizations
     meta['common']['polarisationMode'] = prod_meta['pols']
     meta['common']['radarBand'] = 'C'
@@ -512,10 +505,10 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['filterType'] = None
     meta['prod']['filterWindowSizeCol'] = None
     meta['prod']['filterWindowSizeLine'] = None
-    meta['prod']['geoCorrAccuracyEasternBias'] = None
-    meta['prod']['geoCorrAccuracyEasternSTDev'] = None
-    meta['prod']['geoCorrAccuracyNorthernBias'] = None
-    meta['prod']['geoCorrAccuracyNorthernSTDev'] = None
+    meta['prod']['geoCorrAccuracyAzimuthBias'] = '0'
+    meta['prod']['geoCorrAccuracyAzimuthSTDev'] = ANGLES_RESOLUTION[sid0.sensor][sid0.acquisition_mode]['std_dev']
+    meta['prod']['geoCorrAccuracyRangeBias'] = '0'
+    meta['prod']['geoCorrAccuracyRangeSTDev'] = ANGLES_RESOLUTION[sid0.sensor][sid0.acquisition_mode]['std_dev']
     meta['prod']['geoCorrAccuracy_rRMSE'] = None
     meta['prod']['geoCorrAccuracyReference'] = 'TBD'
     meta['prod']['geoCorrAccuracyType'] = 'slant-range'
@@ -603,7 +596,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         #     meta['source'][uid]['azimuthPixelSpacing'] = str(sum(list(tmp_out.values())) / len(list(tmp_out.values())))
         meta['source'][uid]['azimuthResolution'] = src_sid[uid].meta['azimuthResolution']
         meta['source'][uid]['dataGeometry'] = src_sid[uid].meta['image_geometry']
-        meta['source'][uid]['doi'] = 'https://sentinel.esa.int/documents/247904/1877131/Sentinel-1-Product-Specification'
+        meta['source'][uid]['doi'] = 'TBD'
         meta['source'][uid]['faradayMeanRotationAngle'] = None
         meta['source'][uid]['faradayRotationReference'] = None
         meta['source'][uid]['filename'] = src_sid[uid].file

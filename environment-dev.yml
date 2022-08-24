@@ -13,5 +13,5 @@ dependencies:
   - sphinxcontrib-bibtex>=2.2
   - nbsphinx
   - sphinx_rtd_theme
-  - pip:
-    - pyroSAR @ git+https://github.com/SAR-ARD/pyroSAR.git
+  - pyroSAR>=0.18.0
+
