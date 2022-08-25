@@ -1,7 +1,6 @@
 import os
 import re
 from math import isclose
-from lxml import etree
 from datetime import datetime
 import numpy as np
 from pyroSAR import identify
@@ -33,7 +32,6 @@ def get_prod_meta(product_id, tif, src_scenes):
     """
     out = re.match(re.compile(NRB_PATTERN), product_id).groupdict()
     coord_list = [identify(src).meta['coordinates'] for src in src_scenes]
-    print(tif)
     if tif:
         with vec_from_srccoords(coord_list=coord_list) as srcvec:
             with Raster(tif) as ras:
@@ -66,12 +64,6 @@ def get_prod_meta(product_id, tif, src_scenes):
                 out['nodata_borderpx'] = np.count_nonzero(np.isnan(arr_srcvec))
             srcvec = None
     
-    # pat = 'ERS[12]|ASAR__(IW|EW|S[1-6]{1})___(A|D)_[0-9]{8}T[0-9]{6}.+ML.+xml$'
-    # wf_path = finder(src_dir, [pat], regex=True)[0]
-    # wf = parse_recipe(wf_path)
-    # out['ML_nRgLooks'] = wf['Multilook'].parameters['nRgLooks']
-    # out['ML_nAzLooks'] = wf['Multilook'].parameters['nAzLooks']
-    
     return out
 
 
@@ -97,32 +89,6 @@ def get_uid_sid(filepath):
     sid = identify(filepath)
     
     return uid, sid
-
-
-def etree_from_sid(sid):
-    """
-    Uses a pyroSAR metadata handler to get the parsed manifest and annotation XML data as a dictionary.
-    
-    Parameters
-    ----------
-    sid:  pyroSAR.drivers.ID subclass object
-        A pyroSAR metadata handler generated with `pyroSAR.drivers.identify`.
-    
-    Returns
-    -------
-    dict
-        A dictionary containing the parsed etree.ElementTree objects for the manifest and annotation XML files.
-    """
-    
-    with sid.getFileObj(sid.findfiles('manifest.safe')[0]) as input_man:
-        annotation_files = sid.findfiles(r'^s1[ab].*-vh-.*\.xml$')
-        swaths = [re.search('-iw[1-3]|-ew[1-5]|-s[1-6]]', a).group().replace('-', '') for a in annotation_files]
-        annotation_dict = {}
-        for s, a in zip(swaths, annotation_files):
-            annotation_dict[s.upper()] = etree.fromstring(sid.getFileObj(a).getvalue())
-        
-        return {'manifest': etree.fromstring(input_man.getvalue()),
-                'annotation': annotation_dict}
 
 
 def convert_id_coordinates(coords, stac=False):
@@ -264,69 +230,6 @@ def vec_from_srccoords(coord_list):
     return wkt2vector(wkt, srs=4326)
 
 
-def find_in_annotation(annotation_dict, pattern, single=False, out_type=None):
-    """
-    Find a pattern in each annotation file provided and returns a list of results converted in
-    
-    Parameters
-    ----------
-    annotation_dict: dict
-        A dict of annotation files in the form: {'swath ID': lxml.etree._Element object}
-    pattern: str
-        The pattern to search for in each annotation file.
-    single: bool
-        If True, the results found in each annotation file are expected to be the same and therefore only a single
-        value will be returned instead of a dict. Default is False.
-    out_type: str, optional
-        Output type to convert the results to. Can be one of the following:
-        str (default)
-        float
-        int
-    
-    Returns
-    -------
-    out: dict
-        A dict of the results containing a list for each of the annotation files.
-        I.e., {'swath ID': list[str, float or int]}
-    """
-    if out_type is None:
-        out_type = 'str'
-    
-    out = {}
-    for s, a in annotation_dict.items():
-        out[s] = [x.text for x in a.findall(pattern)]
-        if len(out[s]) == 1:
-            out[s] = out[s][0]
-    
-    if out_type != 'str':
-        for k in list(out.keys()):
-            if isinstance(out[k], list):
-                if out_type == 'float':
-                    out[k] = [float(x) for x in out[k]]
-                elif out_type == 'int':
-                    out[k] = [int(x) for x in out[k]]
-            else:
-                if out_type == 'float':
-                    out[k] = float(out[k])
-                elif out_type == 'int':
-                    out[k] = int(out[k])
-    
-    if single:
-        test_val = list(out.values())[0]
-        for k in out:
-            if out[k] != test_val:
-                raise RuntimeError('Search result for pattern "{}" expected to be the same in all annotation '
-                                   'files.'.format(pattern))
-        if out_type == 'float':
-            return float(test_val)
-        elif out_type == 'int':
-            return int(test_val)
-        else:
-            return str(test_val)
-    else:
-        return out
-
-
 def calc_performance_estimates(files, ref_tif):
     """
     Calculates the performance estimates specified in CARD4L NRB 1.6.9 for all noise power images for the current
@@ -440,30 +343,13 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     
     # Common metadata (sorted alphabetically)
     meta['common']['antennaLookDirection'] = 'RIGHT'
-    # meta['common']['constellation'] = 'sentinel-1'
-
-
-    # meta['common']['operationalMode'] = prod_meta['mode']
-
     meta['common']['operationalMode'] = sid0.acquisition_mode
-
     meta['common']['orbitMeanAltitude'] = '{:.2e}'.format(693000)
-
     meta['common']['orbitNumbers_abs'] = sid0.orbitNumber_abs
     meta['common']['orbitNumbers_rel'] = sid0.orbitNumber_rel
     meta['common']['orbit'] = {'A': 'ascending', 'D': 'descending'}[sid0.orbit]
-         
-
-    # meta['common']['orbit'] = {'A': 'ascending', 'D': 'descending'}[sid0.orbit]
-    # meta['common']['orbitNumbers_rel'] = sid0.meta['orbitNumber_rel']
-    # meta['common']['orbitNumber_start'] = str(meta['common']['orbitNumber_abs']['start'])
-    # meta['common']['orbitNumber_stop'] = str(meta['common']['orbitNumber_abs']['stop'])
     meta['common']['platformFullname'] = {'ERS1': 'ERS1', 'ERS2': 'ERS2', 'ASAR': 'ENVISAT'}[sid0.sensor]    
     meta['common']['instrumentShortName'] = {'ERS1': 'AMI', 'ERS2': 'AMI', 'ASAR': 'ASAR'}[sid0.sensor]
-
-    # meta['common']['platformShortName'] = 'ERS'
-    # meta['common']['platformFullname'] = '{}{}'.format(meta['common']['platformShortName'].lower(),
-    #                                                     meta['common']['platformIdentifier'].lower())
     meta['common']['platformReference'] = {'ERS1': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=220',
                                            'ERS2': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=221',
                                            'ENVISAT': 'http://database.eohandbook.com/database/missionsummary.aspx?missionID=2'}[meta['common']['platformFullname']]
@@ -476,8 +362,6 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     # Product metadata (sorted alphabetically)
     meta['prod']['access'] = None
     meta['prod']['acquisitionType'] = 'NOMINAL'
-    # meta['prod']['ascendingNodeDate'] = manifest0.find('.//s1:ascendingNodeTime', nsmap0).text
-    # meta['prod']['azimuthNumberOfLooks'] = prod_meta['ML_nAzLooks']
     meta['prod']['backscatterConvention'] = 'linear power'
     meta['prod']['backscatterConversionEq'] = '10*log10(DN)'
     meta['prod']['backscatterMeasurement'] = 'gamma0'
@@ -486,7 +370,6 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['card4l-version'] = '5.5'
     meta['prod']['crsEPSG'] = str(prod_meta['epsg'])
     meta['prod']['crsWKT'] = prod_meta['wkt']
-    # meta['prod']['datatakeID'] = manifest0.find('.//s1sarl1:missionDataTakeID', nsmap0).text
     meta['prod']['demEgmReference'] = dem_egm
     meta['prod']['demEgmResamplingMethod'] = 'bilinear'
     meta['prod']['demName'] = dem_name
@@ -544,12 +427,9 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['radiometricAccuracyAbsolute'] = None
     meta['prod']['radiometricAccuracyRelative'] = None
     meta['prod']['radiometricAccuracyReference'] = None
-    # meta['prod']['rangeNumberOfLooks'] = prod_meta['ML_nRgLooks']
     meta['prod']['RTCAlgorithm'] = 'https://doi.org/10.1109/Tgrs.2011.2120616'
     meta['prod']['status'] = 'PROTOTYPE'
     meta['prod']['timeCreated'] = datetime.strptime(proc_time.strftime('%Y%m%dT%H%M%S'), '%Y%m%dT%H%M%S')
-    # meta['prod']['timeCompletionFromAscendingNode'] = str(float(manifest0.find('.//s1:stopTimeANX', nsmap0).text))
-    # meta['prod']['timeStartFromAscendingNode'] = str(float(manifest0.find('.//s1:startTimeANX', nsmap0).text))
     meta['prod']['timeStart'] = datetime.strptime(prod_meta['start'], '%Y%m%dT%H%M%S')
     meta['prod']['timeStop'] = datetime.strptime(prod_meta['stop'], '%Y%m%dT%H%M%S')
     meta['prod']['transform'] = prod_meta['transform']
@@ -557,43 +437,16 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     
     # Source metadata
     for uid in list(src_sid.keys()):
-        # nsmap = src_xml[uid]['manifest'].nsmap
-        # osv = src_sid[uid].getOSV(returnMatch=True, osvType=['POE', 'RES'], useLocal=True)
         coords = src_sid[uid].meta['coordinates']
         xml_envelop, xml_center = convert_id_coordinates(coords=coords)
         stac_bbox, stac_geometry = convert_id_coordinates(coords=coords, stac=True)
-        # swaths = list(src_xml[uid]['annotation'].keys())
-        
-        # (sorted alphabetically)
-
-
-
-        meta['source'][uid] = {}
-       
-        # meta['source'][uid]['access'] = 'https://scihub.copernicus.eu'
+        meta['source'][uid] = {}       
         meta['source'][uid]['access'] = 'https://esar-ds.eo.esa.int/oads/access/collection'
-
         meta['source'][uid]['acquisitionType'] = 'NOMINAL'
-        # meta['source'][uid]['azimuthLookBandwidth'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                                                  pattern='.//azimuthProcessing/lookBandwidth',
-        #                                                                  out_type='float')
-        # meta['source'][uid]['azimuthNumberOfLooks'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                                                  pattern='.//azimuthProcessing/numberOfLooks',
-        #                                                                  single=True)
         meta['source'][uid]['azimuthNumberOfLooks'] = src_sid[uid].meta['SPH_AZIMUTH_LOOKS']
         meta['source'][uid]['azimuthPixelSpacing'] = src_sid[uid].meta['SPH_AZIMUTH_SPACING']
         meta['source'][uid]['rangeNumberOfLooks'] = src_sid[uid].meta['SPH_RANGE_LOOKS']
         meta['source'][uid]['rangePixelSpacing'] = src_sid[uid].meta['SPH_RANGE_SPACING']
-
-        # try:
-        #     meta['source'][uid]['azimuthPixelSpacing'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                                                     pattern='.//azimuthPixelSpacing',
-        #                                                                     single=True)
-        # except RuntimeError:
-        #     tmp_out = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                  pattern='.//azimuthPixelSpacing',
-        #                                  single=False, out_type='float')
-        #     meta['source'][uid]['azimuthPixelSpacing'] = str(sum(list(tmp_out.values())) / len(list(tmp_out.values())))
         meta['source'][uid]['azimuthResolution'] = src_sid[uid].meta['azimuthResolution']
         meta['source'][uid]['dataGeometry'] = src_sid[uid].meta['image_geometry']
         meta['source'][uid]['doi'] = 'TBD'
@@ -604,44 +457,20 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         meta['source'][uid]['geom_stac_geometry_4326'] = stac_geometry
         meta['source'][uid]['geom_xml_center'] = xml_center
         meta['source'][uid]['geom_xml_envelop'] = xml_envelop
-        # inc = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                          pattern='.//geolocationGridPoint/incidenceAngle', out_type='float')
-        # meta['source'][uid]['incidenceAngleMax'] = np.max(list(inc.values()))
-        # meta['source'][uid]['incidenceAngleMin'] = np.min(list(inc.values()))
-        # meta['source'][uid]['incidenceAngleMidSwath'] = np.max(list(inc.values())) - \
-        #                                                 ((np.max(list(inc.values())) - np.min(list(inc.values()))) / 2)
-        # meta['source'][uid]['instrumentAzimuthAngle'] = str(src_sid[uid].meta['heading'])
         meta['source'][uid]['ionosphereIndicator'] = None
-        # meta['source'][uid]['lutApplied'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                                        pattern='.//applicationLutId',
-        #                                                        single=True)
-        # meta['source'][uid]['orbitStateVector'] = os.path.basename(osv).replace('.zip', '')
         meta['source'][uid]['orbitStateVector'] = src_sid[uid].meta['DS_ORBIT_STATE_VECTOR_1________NAME'] # Can it be more than one vector? check
-        # for orb in list(ORB_MAP.keys()):
-        #     if orb in meta['source'][uid]['orbitStateVector']:
-        #         meta['source'][uid]['orbitDataSource'] = ORB_MAP[orb]
         meta['source'][uid]['orbitDataSource'] = ORB_MAP[src_sid[uid].meta['MPH_VECTOR_SOURCE']]
         meta['source'][uid]['orbitDataAccess'] = 'https://scihub.copernicus.eu/gnss'
         np_files = [f for f in src_files if re.search('_NE[BGS]Z', f) is not None]
         meta['source'][uid]['perfEstimates'] = calc_performance_estimates(files=np_files, ref_tif=tif)
         meta['source'][uid]['perfEquivalentNumberOfLooks'] = None
-        #meta['source'][uid]['perfIndicatorsURL'] = 'https://sentinel.esa.int/documents/247904/2142675/Thermal-Denoising-of-Products-Generated-by-Sentinel-1-IPF'
         meta['source'][uid]['perfIntegratedSideLobeRatio'] = None
         meta['source'][uid]['perfNoiseEquivalentIntensityType'] = 'gamma0'
         meta['source'][uid]['perfPeakSideLobeRatio'] = None
         meta['source'][uid]['polCalMatrices'] = None
         meta['source'][uid]['processingCenter'] = src_sid[uid].meta['MPH_PROC_CENTER']
-        # meta['source'][uid]['processingCenter'] = f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['organisation']}, " \
-        #                                           f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['name']}, " \
-        #                                           f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['site']}, " \
-        #                                           f"{src_xml[uid]['manifest'].find('.//safe:facility', nsmap).attrib['country']}"
-        # meta['source'][uid]['processingDate'] = src_xml[uid]['manifest'].find('.//safe:processing', nsmap).attrib['stop']
-
         meta['source'][uid]['processingDate'] = datetime.strptime(src_sid[uid].meta['MPH_PROC_TIME'], '%Y%m%dT%H%M%S')
-        # meta['source'][uid]['processingLevel'] = src_xml[uid]['manifest'].find('.//safe:processing', nsmap).attrib['name']
         meta['source'][uid]['processingLevel'] = 'Level 1'
-        # meta['source'][uid]['processorName'] = src_xml[uid]['manifest'].find('.//safe:software', nsmap).attrib['name']
-        # meta['source'][uid]['processorVersion'] = src_xml[uid]['manifest'].find('.//safe:software', nsmap).attrib['version']
         try :
             meta['source'][uid]['processorName'] = src_sid[uid].meta['MPH_SOFTWARE_VER'].split('/')[0]
             meta['source'][uid]['processorVersion'] = src_sid[uid].meta['MPH_SOFTWARE_VER'].split('/')[1]
@@ -651,34 +480,15 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         meta['source'][uid]['productType'] = src_sid[uid].meta['product']
         meta['source'][uid]['lineLength'] = src_sid[uid].meta['SPH_LINE_LENGTH']        
         meta['source'][uid]['lineTimeInterval'] = src_sid[uid].meta['SPH_LINE_TIME_INTERVAL']
-        # meta['source'][uid]['rangeLookBandwidth'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                                                pattern='.//rangeProcessing/lookBandwidth',
-        #                                                                out_type='float')
-        # meta['source'][uid]['rangeNumberOfLooks'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                                                pattern='.//rangeProcessing/numberOfLooks',
-        #                                                                single=True)
-        # try:
-        #     meta['source'][uid]['rangePixelSpacing'] = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                                                   pattern='.//rangePixelSpacing',
-        #                                                                   single=True)
-        # except RuntimeError:
-        #     tmp_out = find_in_annotation(annotation_dict=src_xml[uid]['annotation'],
-        #                                  pattern='.//rangePixelSpacing',
-        #                                  single=False, out_type='float')
-        #     meta['source'][uid]['rangePixelSpacing'] = str(sum(list(tmp_out.values())) / len(list(tmp_out.values())))
         meta['source'][uid]['rangeResolution'] = src_sid[uid].meta['rangeResolution']
         meta['source'][uid]['sensorCalibration'] = 'TBD'
         meta['source'][uid]['status'] = 'ARCHIVED'
         meta['source'][uid]['timeStart'] = datetime.strptime(src_sid[uid].start, '%Y%m%dT%H%M%S')
         meta['source'][uid]['timeStop'] = datetime.strptime(src_sid[uid].stop, '%Y%m%dT%H%M%S')
-
-        # meta['source'][uid]['swathIdentifier'] = re.search('_IW|EW|S[1-6]{1}_', os.path.basename(src_sid[uid].file)).group().replace('_', '')
         meta['source'][uid]['swathIdentifier'] = src_sid[uid].meta['SPH_SWATH']
-        # meta['source'][uid]['swaths'] = swaths
         meta['source'][uid]['incidenceAngleMax'] = src_sid[uid].meta['incidenceAngleMax']
         meta['source'][uid]['incidenceAngleMin'] = src_sid[uid].meta['incidenceAngleMin']
         meta['source'][uid]['neszNear'] = src_sid[uid].meta['neszNear']
         meta['source'][uid]['neszFar'] = src_sid[uid].meta['neszFar']
         meta['source'][uid]['incidenceAngleMidSwath'] =  src_sid[uid].meta['incidence']
-    # return meta, m_sid, m_src
     return meta

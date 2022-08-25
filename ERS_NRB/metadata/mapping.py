@@ -10,53 +10,12 @@ NRB_PATTERN = r'^(?P<sensor>ERS[12]|ASAR)_' \
               r'(?P<orbitNumber>[0-9]{6})_' \
               r'(?P<dataTakeID>[0-9A-F]{6})'
 
-SRC_PATTERN = r'^(?P<sensor>S1[AB])_' \
-              r'(?P<mode>IW|EW|S[1-6]{1})_' \
-              r'(?P<product>GRDH|SLC_)_' \
-              r'(?P<processingLevel>1)' \
-              r'(?P<category>S)' \
-              r'(?P<pols>SH|SV|DH|DV|VV|HH|HV|VH)_' \
-              r'(?P<start>[0-9]{8}T[0-9]{6})_' \
-              r'(?P<stop>[0-9]{8}T[0-9]{6})_' \
-              r'(?P<orbitNumber>[0-9]{6})_' \
-              r'(?P<dataTakeID>[0-9A-F]{6})_' \
-              r'(?P<ID>[0-9A-Z]{4})'
-
-# Source data resolution
-# https://sentinels.copernicus.eu/web/sentinel/technical-guides/sentinel-1-sar/products-algorithms/level-1-algorithms/single-look-complex
-RES_MAP = {'IW': {'azimuthResolution': {'IW1': '22.5',
-                                        'IW2': '22.7',
-                                        'IW3': '22.6'},
-                  'rangeResolution': {'IW1': '2.7',
-                                      'IW2': '3.1',
-                                      'IW3': '3.5'}},
-           'EW': {'azimuthResolution': {'EW1': '43.7',
-                                        'EW2': '44.3',
-                                        'EW3': '45.2',
-                                        'EW4': '45.6',
-                                        'EW5': '44.0'},
-                  'rangeResolution': {'EW1': '7.9',
-                                      'EW2': '9.9',
-                                      'EW3': '11.6',
-                                      'EW4': '13.3',
-                                      'EW5': '14.4'}},
-           'SM': {'azimuthResolution': {'S1': '4.9',
-                                        'S2': '4.9',
-                                        'S3': '4.9',
-                                        'S4': '4.9',
-                                        'S5': '3.9',
-                                        'S6': '4.9'},
-                  'rangeResolution': {'S1': '1.7',
-                                      'S2': '2.0',
-                                      'S3': '2.5',
-                                      'S4': '3.3',
-                                      'S5': '3.3',
-                                      'S6': '3.6'}}
-           }
-
-# ORB_MAP = {'PREORB': 'predicted',
-#            'RESORB': 'restituted',
-#            'POEORB': 'precise'}
+# Envisat
+# FP = FOS predicted orbit state vectors (NRT processing)
+# DN = DORIS Level 0 navigator product acquired at PDHS (NRT)
+# FR = FOS restituted orbit state vectors
+# DI = DORIS initial (preliminary) orbit
+# DP = DORIS precise orbit If not used, set to ØØ.    
 ORB_MAP = {'PD': 'predicted',
            'RS': 'restituted',
            'PC': 'precise',
@@ -66,12 +25,7 @@ ORB_MAP = {'PD': 'predicted',
            'FR': 'restituted',
            'DI': 'preliminary',
            'DP': 'precise'}
-# Envisat
-# FP = FOS predicted orbit state vectors (NRT processing)
-# DN = DORIS Level 0 navigator product acquired at PDHS (NRT)
-# FR = FOS restituted orbit state vectors
-# DI = DORIS initial (preliminary) orbit
-# DP = DORIS precise orbit If not used, set to ØØ.           
+       
 
 SAMPLE_MAP = {'-dm.tif': {'type': 'mask',
                           'unit': 'mask',

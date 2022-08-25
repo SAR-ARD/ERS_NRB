@@ -2,25 +2,24 @@ import os
 import re
 import time
 import tempfile
-from getpass import getpass
 from datetime import datetime
 from lxml import etree
 import numpy as np
 from osgeo import gdal
 from spatialist import Raster, Vector, vectorize, boundary, bbox, intersect, rasterize
 from spatialist.ancillary import finder
-from spatialist.auxil import gdalwarp, gdalbuildvrt
+from spatialist.auxil import gdalbuildvrt
 from rsgislib.imageutils import gdal_warp
 from pyroSAR import identify_many, Archive
 
-from pyroSAR.snap.util import geocode, noise_power
-from pyroSAR.ancillary import groupbyTime, seconds, find_datasets
+from pyroSAR.snap.util import geocode
+from pyroSAR.ancillary import find_datasets
 from pyroSAR.auxdata import dem_autoload, dem_create
 from ERS_NRB.config import get_config, geocode_conf, gdal_conf
 
 import ERS_NRB.ancillary as ancil
 import ERS_NRB.tile_extraction as tile_ex
-from ERS_NRB.metadata import extract, xmlparser, stacparser
+from ERS_NRB.metadata import extract, stacparser
 gdal.UseExceptions()
 
 
@@ -244,10 +243,6 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
             etree.indent(root)
             tree.write(source, pretty_print=True, xml_declaration=False, encoding='utf-8')
             
-            snap_nodata = 0
-            # gdalwarp(source, outname,
-            #          options={'format': driver, 'outputBounds': bounds, 'srcNodata': snap_nodata, 'dstNodata': 'nan',
-            #                   'multithread': multithread, 'creationOptions': write_options[key]})
             gdal_warp(source, outname, epsg, gdalformat=driver, use_multi_threaded=multithread, 
                         options=write_options[key])
     
@@ -315,7 +310,6 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     # metadata
     nrb_tifs = finder(nrbdir, ['-[a-z]{2,3}.tif'], regex=True, recursive=True)
     meta = extract.meta_dict(config=config, target=nrbdir, src_scenes=src_scenes, src_files=files, proc_time=proc_time)
-    # xmlparser.main(meta=meta, target=nrbdir, tifs=nrb_tifs)
     stacparser.main(meta=meta, target=nrbdir, tifs=nrb_tifs)
 
 
@@ -436,30 +430,6 @@ def main(config_file, section_name):
                 msg = 'Already processed - Skip!'
                 print('### ' + msg)
                 log.info('[GEOCODE] -- {scene} -- {msg}'.format(scene=scene.scene, msg=msg))
-            
-            # print('###### [NOISE_P] Scene {s}/{s_total}: {scene}'.format(s=i + 1, s_total=len(ids),
-            #                                                              scene=scene.scene))
-            # if len([item for item in list_processed if np_dict[np_refarea] in item]) == 0:
-            #     start_time = time.time()
-            #     try:
-            #         noise_power(infile=scene.scene, outdir=out_dir_scene, polarizations=scene.polarizations,
-            #                     spacing=geocode_prms['spacing'], refarea=np_refarea, tmpdir=tmp_dir_scene,
-            #                     externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, t_srs=epsg,
-            #                     externalDEMApplyEGM=geocode_prms['externalDEMApplyEGM'],
-            #                     alignToStandardGrid=geocode_prms['alignToStandardGrid'],
-            #                     standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
-            #                     clean_edges=geocode_prms['clean_edges'],
-            #                     clean_edges_npixels=geocode_prms['clean_edges_npixels'],
-            #                     rlks=geocode_prms['rlks'], azlks=geocode_prms['azlks'])
-            #         t = round((time.time() - start_time), 2)
-            #         log.info('[NOISE_P] -- {scene} -- {time}'.format(scene=scene.scene, time=t))
-            #     except Exception as e:
-            #         log.error('[NOISE_P] -- {scene} -- {error}'.format(scene=scene.scene, error=e))
-            #         continue
-            # else:
-            #     msg = 'Already processed - Skip!'
-            #     print('### ' + msg)
-            #     log.info('[NOISE_P] -- {scene} -- {msg}'.format(scene=scene.scene, msg=msg))
     
     ####################################################################################################################
     # NRB - final product generation
@@ -483,15 +453,15 @@ def main(config_file, section_name):
                                                                scenes=[os.path.basename(s) for s in scenes],
                                                                s=s+1, s_total=len(selection_grouped)))
                 start_time = time.time()
-                # try:
-                nrb_processing(config=config, scenes=scenes, datadir=os.path.dirname(outdir), outdir=outdir,
-                                tile=tile, extent=geo_dict[tile]['ext'], epsg=epsg, wbm=wbm,
-                                multithread=gdal_prms['multithread'], compress='LZW')
-                log.info('[    NRB] -- {scenes} -- {time}'.format(scenes=scenes,
+                try:
+                    nrb_processing(config=config, scenes=scenes, datadir=os.path.dirname(outdir), outdir=outdir,
+                                    tile=tile, extent=geo_dict[tile]['ext'], epsg=epsg, wbm=wbm,
+                                    multithread=gdal_prms['multithread'], compress='LZW')
+                    log.info('[    NRB] -- {scenes} -- {time}'.format(scenes=scenes,
                                                                 time=round((time.time() - start_time), 2)))
-                # except Exception as e:
-                #     log.exception('[    NRB] -- {scenes} -- {error}'.format(scenes=scenes, error=e))
-                #     continue
+                except Exception as e:
+                    log.exception('[    NRB] -- {scenes} -- {error}'.format(scenes=scenes, error=e))
+                    continue
         
         gdal.SetConfigOption('GDAL_NUM_THREADS', gdal_prms['threads_before'])
 def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
@@ -571,14 +541,11 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
                 if not os.path.isfile(dem_tile):
                     with Vector(config['aoi_geometry']) as tile:
                         ext = tile.extent
-                        # ext = scene.getCorners()
                         bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
                         dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
                                    geoid_convert=True, geoid=geoid, pbar=True,
                                    outputBounds=bounds, threads=threads, nodata=-32767)
-                        # dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
-                        #            geoid_convert=True, geoid=geoid, pbar=True,
-                        #            threads=threads)                        
+                      
             if os.path.isfile(fname_wbm_tmp):
                 print('### creating WBM tiles for scene {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
                                                                                  tiles=tiles))
@@ -594,9 +561,7 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
                             dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
                                        resampling_method='mode', pbar=True,
                                        outputBounds=bounds, threads=threads, nodata=-32767)
-                            # dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
-                            #            resampling_method='mode', pbar=True,
-                            #            threads=threads)                            
+                           
         dem_names.append(dem_names_scene)
         wbm_names.append(wbm_names_scene)
 

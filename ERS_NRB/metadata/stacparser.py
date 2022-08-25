@@ -40,16 +40,12 @@ def product_json(meta, target, tifs):
                         geometry=meta['prod']['geom_stac_geometry_4326'],
                         bbox=meta['prod']['geom_stac_bbox_4326'],
                         datetime=date,                    
-                        properties={})
-    
-    # item.common_metadata.license = meta['prod']['licence']
+                        properties={})    
     item.common_metadata.start_datetime = start
     item.common_metadata.end_datetime = stop
     item.common_metadata.created = meta['prod']['timeCreated']
     item.common_metadata.instruments = [meta['common']['instrumentShortName']]
-    # item.common_metadata.constellation = meta['common']['constellation']
     item.common_metadata.platform = meta['common']['platformFullname']
-    # item.common_metadata.gsd = float(meta['prod']['pxSpacingColumn'])
     
     SarExtension.add_to(item)
     SatExtension.add_to(item)
@@ -65,8 +61,7 @@ def product_json(meta, target, tifs):
     sar_ext.apply(instrument_mode=meta['common']['operationalMode'],
                   frequency_band=FrequencyBand[meta['common']['radarBand'].upper()],
                   polarizations=[Polarization[pol] for pol in meta['common']['polarisationChannels']],
-                  product_type='NRB')
-                #   product_type=meta['prod']['card4l-name']) # Should be NRB
+                  product_type=meta['prod']['card4l-name'])
     
     sat_ext.apply(orbit_state=OrbitState[meta['common']['orbit'].upper()],
                   relative_orbit=meta['common']['orbitNumbers_rel'],
@@ -79,11 +74,9 @@ def product_json(meta, target, tifs):
                    transform=meta['prod']['transform'])
 
     item.properties['processing:location'] = meta['prod']['location']
-
     item.properties['processing:facility'] = meta['prod']['processingCenter']
     item.properties['processing:software'] = {meta['prod']['processorName']: meta['prod']['processorVersion']}
-    item.properties['processing:level'] = meta['prod']['processingLevel']
-    
+    item.properties['processing:level'] = meta['prod']['processingLevel']    
     item.properties['card4l:specification'] = meta['prod']['card4l-name']
     item.properties['card4l:specification_version'] = meta['prod']['card4l-version']
     item.properties['card4l:measurement_type'] = meta['prod']['backscatterMeasurement']
@@ -117,15 +110,13 @@ def product_json(meta, target, tifs):
     item.properties['card4l:geometric_accuracy_radial_rmse'] = meta['prod']['geoCorrAccuracy_rRMSE']
     
     item.add_link(link=pystac.Link(rel='card4l-document',
-                                       #    target=meta['prod']['card4l-link'].replace('.pdf', '.docx'),
-                                       target='https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.docx',
+                                       target=meta['prod']['card4l-link'].replace('.pdf', '.docx'),
                                        media_type='application/vnd.openxmlformats-officedocument.wordprocessingml'
                                                   '.document',
                                        title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
                                              ''.format(meta['prod']['card4l-version'])))
     item.add_link(link=pystac.Link(rel='card4l-document',
-                                       #    target=meta['prod']['card4l-link'],
-                                       target='https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.pdf',
+                                       target=meta['prod']['card4l-link'],
                                        media_type='application/pdf',
                                        title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
                                              ''.format(meta['prod']['card4l-version'])))
@@ -176,12 +167,6 @@ def product_json(meta, target, tifs):
                                    target=meta['prod']['griddingConventionURL'],
                                    title='Reference that describes the gridding convention used.'))
     
-    # xml_relpath = './' + os.path.relpath(outname.replace('.json', '.xml'), target).replace('\\', '/')
-    # item.add_asset(key='card4l',
-    #                asset=pystac.Asset(href=xml_relpath,
-    #                                   title='CARD4L XML Metadata File',
-    #                                   media_type=pystac.MediaType.XML,
-    #                                   roles=['metadata', 'card4l']))
     if tifs:
         for tif in tifs:
             relpath = './' + os.path.relpath(tif, target).replace('\\', '/')
@@ -277,7 +262,6 @@ def product_json(meta, target, tifs):
                                                 media_type=pystac.MediaType[meta['prod']['fileFormat']],
                                                 roles=[SAMPLE_MAP[key]['role'], 'metadata'],
                                                 extra_fields=extra_fields))
-    print(outname)
     item.save_object(dest_href=outname)
 
 
@@ -317,7 +301,6 @@ def source_json(meta, target):
         item.common_metadata.end_datetime = stop 
         item.common_metadata.created = meta['source'][uid]['processingDate']
         item.common_metadata.instruments = [meta['common']['instrumentShortName']]
-        # item.common_metadata.constellation = meta['common']['constellation']
         item.common_metadata.platform = meta['common']['platformFullname']
         
         SarExtension.add_to(item)
@@ -325,11 +308,9 @@ def source_json(meta, target):
         ViewExtension.add_to(item)
         sar_ext = SarExtension.ext(item)
         sat_ext = SatExtension.ext(item)
-        view_ext = ViewExtension.ext(item)
         item.stac_extensions.append('https://stac-extensions.github.io/processing/v1.1.0/schema.json')
         item.stac_extensions.append('https://stac-extensions.github.io/card4l/v1.0.0/sar/source.json')
         
-        enl = meta['source'][uid]['perfEquivalentNumberOfLooks']
         sar_ext.apply(instrument_mode=meta['common']['operationalMode'],
                       frequency_band=FrequencyBand[meta['common']['radarBand'].upper()],
                       polarizations=[Polarization[pol] for pol in meta['common']['polarisationChannels']],
@@ -341,16 +322,12 @@ def source_json(meta, target):
                       pixel_spacing_azimuth=float(meta['source'][uid]['azimuthPixelSpacing']),
                       looks_range=int(meta['source'][uid]['rangeNumberOfLooks']),
                       looks_azimuth=int(meta['source'][uid]['azimuthNumberOfLooks']),
-        #               looks_equivalent_number=float(enl) if enl is not None else None,
                       observation_direction=ObservationDirection[meta['common']['antennaLookDirection']])
         
         sat_ext.apply(orbit_state=OrbitState[meta['common']['orbit'].upper()],
                       relative_orbit=meta['common']['orbitNumbers_rel'],
                       absolute_orbit=meta['common']['orbitNumbers_abs'])
         
-        # view_ext.apply(incidence_angle=float(meta['source'][uid]['incidenceAngleMidSwath']),
-        #                azimuth=float(meta['source'][uid]['instrumentAzimuthAngle']))
-
         item.properties['processing:facility'] = meta['source'][uid]['processingCenter']
         item.properties['processing:software'] = {meta['source'][uid]['processorName']:
                                                   meta['source'][uid]['processorVersion']}
@@ -362,17 +339,6 @@ def source_json(meta, target):
         item.properties['card4l:beam_id'] = meta['source'][uid]['swathIdentifier']
         item.properties['card4l:orbit_data_source'] = meta['source'][uid]['orbitDataSource']
         item.properties['card4l:orbit_mean_altitude'] = float(meta['common']['orbitMeanAltitude'])
-        # item.properties['card4l:source_processing_parameters'] = {'lut_applied': meta['source'][uid]['lutApplied'],
-        #                                                           'range_look_bandwidth':
-        #                                                               meta['source'][uid]['rangeLookBandwidth'],
-        #                                                           'azimuth_look_bandwidth':
-        #                                                               meta['source'][uid]['azimuthLookBandwidth']}
-        # for field, key in zip(['card4l:resolution_range', 'card4l:resolution_azimuth'],
-        #                       ['rangeResolution', 'azimuthResolution']):
-        #     res = {}
-        #     for k, v in meta['source'][uid][key].items():
-        #         res[k] = float(v)
-        #     item.properties[field] = res
         item.properties['card4l:source_geometry'] = meta['source'][uid]['dataGeometry']
         item.properties['card4l:incidence_angle_near_range'] = meta['source'][uid]['incidenceAngleMin']
         item.properties['card4l:incidence_angle_far_range'] = meta['source'][uid]['incidenceAngleMax']
@@ -384,15 +350,13 @@ def source_json(meta, target):
         item.properties['card4l:ionosphere_indicator'] = meta['source'][uid]['ionosphereIndicator']
         
         item.add_link(link=pystac.Link(rel='card4l-document',
-                                       #    target=meta['prod']['card4l-link'].replace('.pdf', '.docx'),
-                                       target='https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.docx',
+                                       target=meta['prod']['card4l-link'].replace('.pdf', '.docx'),
                                        media_type='application/vnd.openxmlformats-officedocument.wordprocessingml'
                                                   '.document',
                                        title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
                                              ''.format(meta['prod']['card4l-version'])))
         item.add_link(link=pystac.Link(rel='card4l-document',
-                                       #    target=meta['prod']['card4l-link'],
-                                       target='https://ceos.org/ard/files/PFS/NRB/v5.5/CARD4L-PFS_NRB_v5.5.pdf',
+                                       target=meta['prod']['card4l-link'],
                                        media_type='application/pdf',
                                        title='CARD4L Product Family Specification v{}: Normalised Radar Backscatter'
                                              ''.format(meta['prod']['card4l-version'])))
@@ -418,14 +382,7 @@ def source_json(meta, target):
                                        target=meta['source'][uid]['faradayRotationReference'],
                                        title='Reference describing the method used to derive the estimate for the mean'
                                              ' Faraday rotation angle.'))
-        
-        # xml_relpath = './' + os.path.relpath(outname.replace('.json', '.xml'), target).replace('\\', '/')
-        # item.add_asset(key='card4l',
-        #                asset=pystac.Asset(href=xml_relpath,
-        #                                   title='CARD4L XML Metadata File',
-        #                                   media_type=pystac.MediaType.XML,
-        #                                   roles=['metadata', 'card4l']))
-        print(outname)
+    
         item.save_object(dest_href=outname)
 
 
