@@ -10,3 +10,4 @@ dependencies:
   - pystac
   - scipy
   - pyroSAR>=0.18.0
+  - rsgislib

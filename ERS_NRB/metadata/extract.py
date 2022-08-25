@@ -667,7 +667,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         #                                  single=False, out_type='float')
         #     meta['source'][uid]['rangePixelSpacing'] = str(sum(list(tmp_out.values())) / len(list(tmp_out.values())))
         meta['source'][uid]['rangeResolution'] = src_sid[uid].meta['rangeResolution']
-        meta['source'][uid]['sensorCalibration'] = 'https://sentinel.esa.int/web/sentinel/technical-guides/sentinel-1-sar/sar-instrument/calibration'
+        meta['source'][uid]['sensorCalibration'] = 'TBD'
         meta['source'][uid]['status'] = 'ARCHIVED'
         meta['source'][uid]['timeStart'] = datetime.strptime(src_sid[uid].start, '%Y%m%dT%H%M%S')
         meta['source'][uid]['timeStop'] = datetime.strptime(src_sid[uid].stop, '%Y%m%dT%H%M%S')
