@@ -24,7 +24,7 @@ created from the S2 KML file with corner coordinate (``xmax``, ``ymin``). The re
 
     from pyroSAR.snap import geocode
 
-    epsg = 32632  # just for demonstration; will be read from KML file
+    epsg = 32632  # just for demonstration; will be read from AOI geojson
     spacing = 10
     dem = 'Copernicus 30m Global DEM'
 

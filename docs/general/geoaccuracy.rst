@@ -38,9 +38,6 @@ of each ERS_NRB product:
 
 * rRMSE is only calculated if a COP-DEM was used for processing, otherwise the value is set to ``None``
 
-Development Status
-------------------
-The development status is tracked and discussed in the following Github issue: https://github.com/SAR-ARD/S1_NRB/issues/33
 
 References
 -----------

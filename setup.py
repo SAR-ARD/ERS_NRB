@@ -6,7 +6,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='ERS_NRB',
-    version='0.1.1',
+    version='0.1.2',
     description="Prototype processor for the ERS Normalized Radar Backscatter (ERS NRB) product",
     long_description=long_description,
     long_description_content_type='text/markdown',

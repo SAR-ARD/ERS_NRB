@@ -22,7 +22,7 @@ The following code can be used to replicate the software installation on a Linux
 See also the web page on how to `update SNAP from the command line <https://senbox.atlassian.net/wiki/spaces/SNAP/pages/30539785/Update+SNAP+from+the+command+line>`_.
 
 Alternatively, updates for individual modules and versions can be downloaded in the `SNAP Update Center <https://step.esa.int/updatecenter/>`_.
-The latest bundle that was used during release of version 0.1.1 is available here: https://step.esa.int/updatecenter/8.0_20220323-143356/.
+The latest bundle that was used during release of version 0.1.2 is available here: https://step.esa.int/updatecenter/8.0_20220323-143356/.
 
 ERS_NRB
 ------
@@ -44,5 +44,5 @@ repository for available versions.
 
 ::
 
-    pip install git+https://github.com/SAR-ARD/ERS_NRB.git@v0.1.1
+    pip install git+https://github.com/SAR-ARD/ERS_NRB.git@0.1.2
 

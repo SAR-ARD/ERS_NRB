@@ -28,7 +28,7 @@ The time period to create ERS-NRB products for. Allowed date formats are ``%Y-%m
 
 - **acq_mode**
 
-Options: ``IMP | IMM | APP``
+Options: ``IMP | IMM | APP | IMS | WSM``
 
 The acquisition mode of the source scenes that should be processed.
 
@@ -60,7 +60,7 @@ The Digital Elevation Model (DEM) that should be used for processing.
 Note that water body masks are not available for "Copernicus 30m Global DEM" and "GETASSE30", and will therefore not be
 included in the product data mask. "Copernicus 10m EEA DEM" and "Copernicus 30m Global DEM II" (both include water body masks)
 are retrieved from the `Copernicus Space Component Data Access system (CSCDA) <https://spacedata.copernicus.eu/web/cscda/data-access/registration>`_,
-which requires registration. The processor asks for authentification during runtime if one of these options is selected.
+which requires registration. You will need to set up the environment variables ``FTP_USER`` and ``FTP_PASS`` to authenticate.
 
 - **gdal_threads**
 
@@ -85,18 +85,18 @@ The following options are currently available:
 
 ::
 
-    ERS_NRB --help
+    ers_nrb --help
 
 Print a help message for the CLI tool.
 
 ::
 
-    ERS_NRB -c /path/to/config.ini
+    ers_nrb -c /path/to/config.ini
 
 Start the processor using parameters defined in the default section of a ``config.ini`` file.
 
 ::
 
-    ERS_NRB -c /path/to/config.ini -s SECTION_NAME
+    ers_nrb -c /path/to/config.ini -s SECTION_NAME
 
 Start the processor using parameters defined in section ``SECTION_NAME`` of a ``config.ini`` file.
