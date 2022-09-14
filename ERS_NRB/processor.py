@@ -338,7 +338,10 @@ def main(config_file, section_name):
     
     with Archive(dbfile=config['db_file']) as archive:        
         archive.insert(scenes)
-        selection = archive.select(product='PRI',
+        product = 'PRI'
+        if config['acq_mode'] in ['IMS']:
+            product = 'SLC'
+        selection = archive.select(product=product,
                                    acquisition_mode=config['acq_mode'],
                                    mindate=config['mindate'], maxdate=config['maxdate'])
     
