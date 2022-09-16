@@ -28,7 +28,7 @@ The time period to create ERS-NRB products for. Allowed date formats are ``%Y-%m
 
 - **acq_mode**
 
-Options: ``IMP | IMM | APP | IMS | WSM``
+Options: ``IMP | IMM | IMS | APP | WSM``
 
 The acquisition mode of the source scenes that should be processed.
 
@@ -38,7 +38,7 @@ Both need to be provided as full paths to existing directories. ``work_dir`` is 
 subdirectories and files are stored that are generated during processing. ``scene_dir`` will be searched recursively for
 any ASAR/ERS scenes using the regex pattern ``'^SAR.*\.E[12]$'`` and ``'^ASA.*\.N1$'``.
 
-- **tmp_dir**, **dem_dir** & **wbm_dir*
+- **tmp_dir**, **dem_dir** & **wbm_dir**
 
 Processing ERS-NRB products creates many intermediate files that are expected to be stored in separate subdirectories. The
 default values provided in the example configuration file linked above are recommended and will automatically create
