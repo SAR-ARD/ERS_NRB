@@ -9,7 +9,7 @@ from spatialist import Raster
 from spatialist.ancillary import finder
 from spatialist.vector import wkt2vector, bbox
 from spatialist.raster import rasterize
-from ERS_NRB.metadata.mapping import NRB_PATTERN, ORB_MAP
+from ERS_NRB.metadata.mapping import NRB_PATTERN, ORB_MAP, NOISE_MAP
 
 
 def get_prod_meta(product_id, tif, src_scenes):
@@ -406,8 +406,10 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['griddingConvention'] = 'Military Grid Reference System (MGRS)'
     meta['prod']['licence'] = None
     meta['prod']['majorCycleID'] = str(sid0.meta['cycleNumber'])
-    meta['prod']['noiseRemovalApplied'] = False
-    meta['prod']['noiseRemovalAlgorithm'] = 'https://doi.org/10.1109/tgrs.2018.2889381'
+    
+    meta['prod']['noiseRemovalApplied'] = NOISE_MAP[sid0.acquisition_mode]
+    # meta['prod']['noiseRemovalAlgorithm'] = 'https://doi.org/10.1109/tgrs.2018.2889381'
+
     meta['prod']['numberLines'] = str(prod_meta['rows'])
     meta['prod']['numberOfAcquisitions'] = str(len(src_scenes))
     meta['prod']['numBorderPixels'] = prod_meta['nodata_borderpx']

@@ -18,10 +18,6 @@ Options: ``all | nrb | snap``
 
 This parameter determines if the entire processing chain should be executed or only part of it.
 
-- **aoi_geometry**
-
-The area of interest (AOI) for which ERS-NRB products should be created, it needs to be a geojson.
-
 - **mindate** & **maxdate**
 
 The time period to create ERS-NRB products for. Allowed date formats are ``%Y-%m-%d`` and ``%Y-%m-%dT%H:%M:%S``.

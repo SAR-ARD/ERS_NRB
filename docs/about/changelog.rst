@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.1.3 | 2022-09-22
+------------------
+* Remove the need for an external AOI, no we generate one on the fly
+* Noise removal metadata update
+* Remove colour composite VRT for single band imagery
+`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.2...0.1.3>`_
+
 0.1.2 | 2022-09-14
 ------------------
 * Compatible with IMS product imagery, WSM needs update in pyroSAR library

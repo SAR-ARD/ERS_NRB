@@ -17,6 +17,19 @@ Configuration
         geocode_conf
         get_config
 
+AOI Generation
+-------------
+
+.. automodule:: ERS_NRB.tile_extraction
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. autosummary::
+        :nosignatures:
+
+        no_aoi
+
 Processing
 ----------
 

@@ -138,7 +138,6 @@ def create_rgb_vrt(outname, infiles, overviews, overview_resampling):
     -------
     None
     """
-    
     # make sure order is right and VV polarization is first
     paths_reorder = []
     for i, f in enumerate(infiles):
@@ -288,9 +287,9 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
                     'name': 'ocean water'}}
 
     tile_bounds = [extent['xmin'], extent['ymin'], extent['xmax'], extent['ymax']]
-    vrt_snap_ls = os.path.dirname(outname) + '/snap_ls.vrt'
-    vrt_snap_valid = os.path.dirname(outname) + '/snap_valid.vrt'
-    vrt_snap_gamma0 = os.path.dirname(outname) + '/snap_gamma0.vrt'
+    vrt_snap_ls = '/vsimem/' + os.path.dirname(outname) + '/snap_ls.vrt'
+    vrt_snap_valid = '/vsimem/' + os.path.dirname(outname) + '/snap_valid.vrt'
+    vrt_snap_gamma0 = '/vsimem/' + os.path.dirname(outname) + '/snap_gamma0.vrt'
     gdalbuildvrt(snap_ls_mask, vrt_snap_ls, options={'outputBounds': tile_bounds}, void=False)
     gdalbuildvrt(valid_mask_list, vrt_snap_valid, options={'outputBounds': tile_bounds}, void=False)
     gdalbuildvrt(snap_gamma0, vrt_snap_gamma0, options={'outputBounds': tile_bounds}, void=False)
@@ -544,7 +543,6 @@ def _log_process_config(logger, config):
     PROCESSING CONFIGURATION
     
     mode = {config['mode']}
-    aoi_geometry = {config['aoi_geometry']}
     mindate = {config['mindate'].isoformat()}
     maxdate = {config['maxdate'].isoformat()}
     acq_mode = {config['acq_mode']}

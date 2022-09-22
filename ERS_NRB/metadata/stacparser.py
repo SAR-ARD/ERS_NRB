@@ -138,10 +138,10 @@ def product_json(meta, target, tifs):
     item.add_link(link=pystac.Link(rel='related',
                                    target=meta['prod']['ancillaryData1'],
                                    title='Reference to ancillary data used in the generation process.'))
-    if meta['prod']['noiseRemovalApplied']:
-        item.add_link(link=pystac.Link(rel='noise-removal',
-                                       target=meta['prod']['noiseRemovalAlgorithm'],
-                                       title='Reference to the noise removal algorithm details.'))
+    # if meta['prod']['noiseRemovalApplied']:
+    #     item.add_link(link=pystac.Link(rel='noise-removal',
+    #                                    target=meta['prod']['noiseRemovalAlgorithm'],
+    #                                    title='Reference to the noise removal algorithm details.'))
     item.add_link(link=pystac.Link(rel='radiometric-terrain-correction',
                                    target=meta['prod']['RTCAlgorithm'],
                                    title='Reference to the Radiometric Terrain Correction algorithm details.'))

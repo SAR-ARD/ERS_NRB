@@ -15,4 +15,5 @@ dependencies:
   - sphinx_rtd_theme
   - pyroSAR>=0.18.0
   - rsgislib
-
+  - pyproj
+  - shapely

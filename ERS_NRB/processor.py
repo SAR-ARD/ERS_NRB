@@ -260,17 +260,18 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     
     ###################################################################################################################
     # log-scaled gamma nought & color composite
-    log_vrts = []
-    for item in measure_paths:
-        log = item.replace('lin.tif', 'log.vrt')
-        log_vrts.append(log)
-        if not os.path.isfile(log):
-            ancil.vrt_pixfun(src=item, dst=log, fun='log10', scale=10,
-                             options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
-    
-    cc_path = re.sub('[hv]{2}', 'cc', measure_paths[0]).replace('.tif', '.vrt')
-    cc_path = re.sub('[hv]{2}', 'cc', log_vrts[0])
-    ancil.create_rgb_vrt(outname=cc_path, infiles=measure_paths, overviews=overviews,
+    if len(measure_paths) > 1:
+        log_vrts = []
+        for item in measure_paths:
+            log = item.replace('lin.tif', 'log.vrt')
+            log_vrts.append(log)
+            if not os.path.isfile(log):
+                ancil.vrt_pixfun(src=item, dst=log, fun='log10', scale=10,
+                                options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
+        
+        cc_path = re.sub('[hv]{2}', 'cc', measure_paths[0]).replace('.tif', '.vrt')
+        cc_path = re.sub('[hv]{2}', 'cc', log_vrts[0])
+        ancil.create_rgb_vrt(outname=cc_path, infiles=measure_paths, overviews=overviews,
                          overview_resampling=ovr_resampling)
     
     ###################################################################################################################
@@ -332,7 +333,6 @@ def main(config_file, section_name):
     scenesENVI = finder(config['scene_dir'], [r'^ASA.*\.N1'], regex=True, recursive=True)
 
     scenes = scenesERS + scenesENVI
-    print(f"scenes: {scenes}")
     if not os.path.isfile(config['db_file']):
         config['db_file'] = os.path.join(config['work_dir'], config['db_file'])
     
@@ -356,7 +356,8 @@ def main(config_file, section_name):
     # geometry and DEM handling
     ids = identify_many(selection)
 
-    geo_dict, align_dict = tile_ex.main(config=config, spacing=geocode_prms['spacing'])
+    # geo_dict, align_dict = tile_ex.main(config=config, spacing=geocode_prms['spacing'])
+    geo_dict, align_dict = tile_ex.no_aoi(ids=ids, spacing=geocode_prms['spacing'])
     aoi_tiles = list(geo_dict.keys())
     epsg_set = set([geo_dict[tile]['epsg'] for tile in list(geo_dict.keys())])
     if len(epsg_set) != 1:
@@ -447,10 +448,12 @@ def main(config_file, section_name):
 
             if not os.path.isfile(wbm):
                 wbm = None
-            
             for s, scenes in enumerate(selection_grouped):
-                if isinstance(scenes, str):
+                if isinstance(scenes, str):                    
                     scenes = [scenes]
+                outnames = [x.outname_base() for x in identify_many(scenes)]
+                if tile not in outnames:
+                    continue
                 print('###### [NRB] Tile {t}/{t_total}: {tile} | '
                       'Scenes {s}/{s_total}: {scenes} '.format(tile=tile, t=t+1, t_total=len(aoi_tiles),
                                                                scenes=[os.path.basename(s) for s in scenes],
@@ -529,42 +532,35 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
     
     dem_names = []
     wbm_names = []
+    geo_dict, align_dict = tile_ex.no_aoi(ids=id_list, spacing=spacing)    
     for scene in id_list:
         dem_names_scene = []
         wbm_names_scene = []
+        print('### creating DEM tiles for scene: {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
+                                                                            tiles=scene.outname_base()))
+        dem_tile = os.path.join(dem_dir, '{}_DEM.tif'.format(scene.outname_base()))
+        dem_names_scene.append(dem_tile)
+        if not os.path.isfile(dem_tile):
+            ext = geo_dict[scene.outname_base()]['ext']
+            bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
+            dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
+                        geoid_convert=True, geoid=geoid, pbar=True,
+                            outputBounds=bounds, threads=threads, nodata=-32767)
+                    
+        if os.path.isfile(fname_wbm_tmp):
+            print('### creating WBM tiles for scene {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
+                                                                                tiles=scene.outname_base()))
+            wbm_tile = os.path.join(wbm_dir, '{}_WBM.tif'.format(scene.outname_base()))
+            wbm_names_scene.append(wbm_tile)
 
-        with scene.bbox() as box:
-            with Vector(config['aoi_geometry']) as aoi:           
-                tiles =  [x.name for x in aoi.getfeatures()]
-            print('### creating DEM tiles for scene: {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
-                                                                              tiles=tiles))
-            for i, tilename in enumerate(tiles):
-                dem_tile = os.path.join(dem_dir, '{}_DEM.tif'.format(tilename))
-                dem_names_scene.append(dem_tile)
-                if not os.path.isfile(dem_tile):
-                    with Vector(config['aoi_geometry']) as tile:
-                        ext = tile.extent
-                        bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
-                        dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
-                                   geoid_convert=True, geoid=geoid, pbar=True,
-                                   outputBounds=bounds, threads=threads, nodata=-32767)
-                      
-            if os.path.isfile(fname_wbm_tmp):
-                print('### creating WBM tiles for scene {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
-                                                                                 tiles=tiles))
-                for i, tilename in enumerate(tiles):
-                    wbm_tile = os.path.join(wbm_dir, '{}_WBM.tif'.format(tilename))
-                    wbm_names_scene.append(wbm_tile)
-
-                    if not os.path.isfile(wbm_tile):
-                        with Vector(config['aoi_geometry']) as tile:
-                            ext = tile.extent
-                            # ext = scene.getCorners()
-                            bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
-                            dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
-                                       resampling_method='mode', pbar=True,
-                                       outputBounds=bounds, threads=threads, nodata=-32767)
-                           
+            if not os.path.isfile(wbm_tile):
+                ext = geo_dict[scene.outname_base()]['ext']
+                # ext = scene.getCorners()
+                bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
+                dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
+                                resampling_method='mode', pbar=True,
+                                outputBounds=bounds, threads=threads, nodata=-32767)
+                    
         dem_names.append(dem_names_scene)
         wbm_names.append(wbm_names_scene)
 

@@ -28,7 +28,7 @@ def get_config(config_file, section_name='GENERAL'):
     parser.read(config_file)
     parser_sec = parser[section_name]
     
-    allowed_keys = ['mode', 'aoi_geometry', 'mindate', 'maxdate', 'acq_mode',
+    allowed_keys = ['mode', 'mindate', 'maxdate', 'acq_mode',
                     'work_dir', 'scene_dir', 'out_dir', 'tmp_dir', 'dem_dir', 'wbm_dir',
                     'db_file', 'dem_type', 'gdal_threads']
     out_dict = {}
@@ -46,9 +46,9 @@ def get_config(config_file, section_name='GENERAL'):
         # if k == 'aoi_tiles':
         #     if v is not None:
         #         v = parser_sec.get_tile_list(k)
-        if k == 'aoi_geometry':
-            if v is not None:
-                assert os.path.isfile(v), "Parameter '{}': File {} could not be found".format(k, v)
+        # if k == 'aoi_geometry':
+        #     if v is not None:
+        #         assert os.path.isfile(v), "Parameter '{}': File {} could not be found".format(k, v)
         if k.endswith('date'):
             v = parser_sec.get_datetime(k)
         if k == 'acq_mode':

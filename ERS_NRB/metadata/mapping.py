@@ -25,7 +25,17 @@ ORB_MAP = {'PD': 'predicted',
            'FR': 'restituted',
            'DI': 'preliminary',
            'DP': 'precise'}
-       
+
+# ERS-1 IM, ERS-2 IM and ENVISAT IM - Not Applicable
+# ENVISAT AP and WS - Not Applied
+NOISE_MAP = {'IMS': 'Not Applicable',
+             'IMP': 'Not Applicable',
+             'IMM': 'Not Applicable',
+             'APP': 'Not Applied',
+             'APS': 'Not Applied',
+             'WSM': 'Not Applied',
+}
+
 
 SAMPLE_MAP = {'-dm.tif': {'type': 'mask',
                           'unit': 'mask',

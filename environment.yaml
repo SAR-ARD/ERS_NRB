@@ -11,3 +11,5 @@ dependencies:
   - scipy
   - pyroSAR>=0.18.0
   - rsgislib
+  - pyproj
+  - shapely
