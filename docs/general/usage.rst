@@ -62,6 +62,10 @@ which requires registration. You will need to set up the environment variables `
 
 Temporarily changes GDAL_NUM_THREADS during processing. Will be reset after processing has finished.
 
+- **compression**
+
+Selects the compression of the final product. LZW if not specified. See https://gdal.org/drivers/raster/gtiff.html#creation-options for options.
+
 Sections
 ^^^^^^^^
 Configuration files in INI format can have different sections. Each section begins at a section name and ends at the next

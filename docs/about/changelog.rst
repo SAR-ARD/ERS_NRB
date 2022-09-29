@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.4 | 2022-09-29
+------------------
+* Add compression as a config parameter
+`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.3...0.1.4>`_
+
 0.1.3 | 2022-09-22
 ------------------
 * Remove the need for an external AOI, no we generate one on the fly

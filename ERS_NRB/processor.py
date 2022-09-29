@@ -24,7 +24,7 @@ gdal.UseExceptions()
 
 
 def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None, multithread=True,
-                   compress='LERC_ZSTD', overviews=None, recursive=False):
+                   overviews=None, recursive=False):
     """
     Finalizes the generation of Sentinel-1 NRB products after the main processing steps via `pyroSAR.snap.util.geocode`
     have been executed. This includes the following:
@@ -54,9 +54,6 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     multithread: bool, optional
         Should `gdalwarp` use multithreading? Default is True. The number of threads used, can be adjusted in the
         config.ini file with the parameter `gdal_threads`.
-    compress: str, optional
-        Compression algorithm to use. See https://gdal.org/drivers/raster/gtiff.html#creation-options for options.
-        Defaults to 'LERC_DEFLATE'.
     overviews: list[int], optional
         Internal overview levels to be created for each GeoTIFF file. Defaults to [2, 4, 9, 18, 36]
     recursive: bool, optional
@@ -66,6 +63,7 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     -------
     None
     """
+    compress=config['compression']
     if overviews is None:
         overviews = [2, 4, 9, 18, 36]
     
@@ -462,7 +460,7 @@ def main(config_file, section_name):
                 try:
                     nrb_processing(config=config, scenes=scenes, datadir=os.path.dirname(outdir), outdir=outdir,
                                     tile=tile, extent=geo_dict[tile]['ext'], epsg=epsg, wbm=wbm,
-                                    multithread=gdal_prms['multithread'], compress='LZW')
+                                    multithread=gdal_prms['multithread'])
                     log.info('[    NRB] -- {scenes} -- {time}'.format(scenes=scenes,
                                                                 time=round((time.time() - start_time), 2)))
                 except Exception as e:

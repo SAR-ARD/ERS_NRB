@@ -30,7 +30,7 @@ def get_config(config_file, section_name='GENERAL'):
     
     allowed_keys = ['mode', 'mindate', 'maxdate', 'acq_mode',
                     'work_dir', 'scene_dir', 'out_dir', 'tmp_dir', 'dem_dir', 'wbm_dir',
-                    'db_file', 'dem_type', 'gdal_threads']
+                    'db_file', 'dem_type', 'gdal_threads', 'compression']
     out_dict = {}
     for k, v in parser_sec.items():
         if k not in allowed_keys:
@@ -74,7 +74,12 @@ def get_config(config_file, section_name='GENERAL'):
                        'Copernicus 30m Global DEM', 'GETASSE30', "Copernicus 90m Global DEM II"]
             assert v in allowed, "Parameter '{}': expected to be one of {}; got '{}' instead".format(k, allowed, v)
         out_dict[k] = v
-    
+    try:
+        out_dict['compression']
+    except:
+        out_dict['compression'] = 'LZW'
+
+    print(out_dict['compression'])
     # assert any([out_dict[k] is not None for k in ['aoi_tiles', 'aoi_geometry']])
     
     return out_dict
@@ -148,6 +153,7 @@ def geocode_conf(config):
             'clean_edges_npixels': 3,
             'test': False,
             'cleanup': False,
+            'compression': config['compression'],
             'rlks': {'IMM': 5, # TODO Completly guess
                      'IMP': 6, # TODO Completly guess
                      'APP': 3, # TODO Completly guess
