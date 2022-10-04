@@ -286,11 +286,11 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
                            overviews=overviews, overview_resampling=ovr_resampling, wbm=wbm)
     ###################################################################################################################
     # Acquisition ID image
-    with Raster(gs_path) as ras_gs:
-        extent = ras_gs.extent    
-    ancil.create_acq_id_image(ref_tif=gs_path, valid_mask_list=snap_dm_tile_overlap, src_scenes=src_scenes,
-                              extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['acquisitionImage'],
-                              overviews=overviews)
+    # with Raster(gs_path) as ras_gs:
+    #     extent = ras_gs.extent    
+    # ancil.create_acq_id_image(ref_tif=gs_path, valid_mask_list=snap_dm_tile_overlap, src_scenes=src_scenes,
+    #                           extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['acquisitionImage'],
+    #                           overviews=overviews)
     ###################################################################################################################
     # sigma nought RTC
     for item in measure_paths:
@@ -305,6 +305,11 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
         if not os.path.isfile(sigma0_rtc_log):
             ancil.vrt_pixfun(src=sigma0_rtc_lin, dst=sigma0_rtc_log, fun='log10', scale=10,
                              options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
+        
+        gamma0_rtc_log = item.replace('lin.tif', 'log.vrt')
+        if not os.path.isfile(gamma0_rtc_log):
+            ancil.vrt_pixfun(src=item, dst=gamma0_rtc_log, fun='log10', scale=10,
+                       options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)        
     ####################################################################################################################
     # metadata
     nrb_tifs = finder(nrbdir, ['-[a-z]{2,3}.tif'], regex=True, recursive=True)
@@ -415,9 +420,10 @@ def main(config_file, section_name):
                     # geocode(infile=scene, outdir=config['out_dir'], t_srs=epsg, tmpdir=config['tmp_dir'],
                     #         standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
                     #         demName='SRTM 3Sec', externalDEMNoDataValue=ex_dem_nodata, **geocode_prms)
+                    print(f"Looks: {scene.meta['looks']}")
                     geocode(infile=scene, outdir=config['out_dir'], t_srs=epsg, tmpdir=config['tmp_dir'],
                             standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
-                            externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, **geocode_prms)
+                            externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, **geocode_prms, rlks=scene.meta['looks'][0], azlks=scene.meta['looks'][1])
 
                     t = round((time.time() - start_time), 2)
                     log.info('[GEOCODE] -- {scene} -- {time}'.format(scene=scene.scene, time=t))

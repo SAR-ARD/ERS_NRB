@@ -135,11 +135,11 @@ def geocode_conf(config):
     dict
         Dictionary of parameters that can be passed to `pyroSAR.snap.util.geocode`
     """
-    return {'spacing': {'IMM': 10, # TODO Completly guess
-                        'IMP': 10, # TODO Completly guess
-                        'APP': 20, # TODO Completly guess
-                        'IMS': 20, # TODO Completly guess
-                        'WSM': 20,}[config['acq_mode']], # TODO Completly guess
+    return {'spacing': {'IMM': 75, 
+                        'IMP': 12.5,
+                        'APP': 12.5,
+                        'IMS': 12.5,
+                        'WSM': 75}[config['acq_mode']],
             'scaling': 'linear',
             'groupsize': 1,
             'allow_RES_OSV': True,
@@ -152,18 +152,8 @@ def geocode_conf(config):
             'clean_edges': True,
             'clean_edges_npixels': 3,
             'test': False,
-            'cleanup': False,
-            'compression': config['compression'],
-            'rlks': {'IMM': 5, # TODO Completly guess
-                     'IMP': 6, # TODO Completly guess
-                     'APP': 3, # TODO Completly guess
-                     'IMS': 6, # TODO Completly guess
-                     'WSM': 3}[config['acq_mode']], # TODO Completly guess
-            'azlks': {'IMM': 1, # TODO Completly guess
-                      'IMP': 6, # TODO Completly guess
-                      'APP': 1, # TODO Completly guess
-                      'IMS': 1, # TODO Completly guess
-                      'WSM': 1}[config['acq_mode']]} # TODO Completly guess
+            'cleanup': False
+            }
 
 
 def gdal_conf(config):

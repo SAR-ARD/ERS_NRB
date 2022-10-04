@@ -15,11 +15,10 @@ import pyroSAR
 from pyroSAR import identify, examine
 
 
-def vrt_pixfun(src, dst, fun, scale=None, offset=None, options=None, overviews=None, overview_resampling=None):
+def vrt_pixfun(src, dst, fun, relpaths= None, scale=None, offset=None, args=None, options=None, overviews=None, overview_resampling=None):
     """
     Creates a VRT file for the specified source dataset(s) and adds a pixel function that should be applied on the fly
     when opening the VRT file.
-    
     Parameters
     ----------
     src: str or list[str]
@@ -27,28 +26,45 @@ def vrt_pixfun(src, dst, fun, scale=None, offset=None, options=None, overviews=N
     dst: str
         The output dataset.
     fun: str
-        A PixelFunctionType that should be applied on the fly when opening the VRT file. The function is applied to a
+        A `PixelFunctionType` that should be applied on the fly when opening the VRT file. The function is applied to a
         band that derives its pixel information from the source bands. A list of possible options can be found here:
-        https://gdal.org/drivers/raster/vrt.html#default-pixel-functions
+        https://gdal.org/drivers/raster/vrt.html#default-pixel-functions.
         Furthermore, the option 'decibel' can be specified, which will implement a custom pixel function that uses
         Python code for decibel conversion (10*log10).
+    relpaths: bool, optional
+        Should all `SourceFilename` XML elements with attribute `@relativeToVRT="0"` be updated to be paths relative to
+        the output VRT file? Default is False.
     scale: int, optional
          The scale that should be applied when computing “real” pixel values from scaled pixel values on a raster band.
          Will be ignored if `fun='decibel'`.
     offset: float, optional
         The offset that should be applied when computing “real” pixel values from scaled pixel values on a raster band.
         Will be ignored if `fun='decibel'`.
+    args: dict, optional
+        arguments for `fun` passed as `PixelFunctionArguments`. Requires GDAL>=3.5 to be read.
     options: dict, optional
-        Additional parameters passed to gdal.BuildVRT. For possible options see:
-        https://gdal.org/python/osgeo.gdal-module.html#BuildVRTOptions
+        Additional parameters passed to `gdal.BuildVRT`.
     overviews: list[int], optional
         Internal overview levels to be created for each raster file.
     overview_resampling: str, optional
         Resampling method for overview levels.
-    
-    Returns
-    -------
-    None
+    Examples
+    --------
+    linear backscatter as input:
+    >>> src = 's1a-iw-nrb-20220601t052704-043465-0530a1-32tpt-vh-g-lin.tif'
+    decibel scaling I:
+    use `log10` pixel function and additional `Scale` parameter.
+    Known to display well in QGIS, but `Scale` is ignored when reading array in Python.
+    >>> dst = src.replace('-lin.tif', '-log1.vrt')
+    >>> create_vrt(src=src, dst=dst, fun='log10', scale=10)
+    decibel scaling II:
+    use custom Python pixel function. Requires additional environment variable GDAL_VRT_ENABLE_PYTHON set to YES.
+    >>> dst = src.replace('-lin.tif', '-log2.vrt')
+    >>> create_vrt(src=src, dst=dst, fun='decibel')
+    decibel scaling III:
+    use `dB` pixel function with additional `PixelFunctionArguments`. Works best but requires GDAL>=3.5.
+    >>> dst = src.replace('-lin.tif', '-log3.vrt')
+    >>> create_vrt(src=src, dst=dst, fun='dB', args={'fact': 10})
     """
     gdalbuildvrt(src=src, dst=dst, options=options)
     tree = etree.parse(dst)
@@ -70,16 +86,16 @@ def vrt_pixfun(src, dst, fun, scale=None, offset=None, options=None, overviews=N
     else:
         pixfun_type = etree.SubElement(band, 'PixelFunctionType')
         pixfun_type.text = fun
+        if args is not None:
+            arg = etree.SubElement(band, 'PixelFunctionArguments')
+            for key, value in args.items():
+                arg.attrib[key] = str(value)
         if scale is not None:
             sc = etree.SubElement(band, 'Scale')
             sc.text = str(scale)
         if offset is not None:
             off = etree.SubElement(band, 'Offset')
             off.text = str(offset)
-    
-    complexSrc = band.find('ComplexSource')
-    nodata = complexSrc.find('NODATA')
-    nodata.text = 'nan'
     
     if any([overviews, overview_resampling]) is not None:
         ovr = tree.find('OverviewList')
@@ -92,6 +108,13 @@ def vrt_pixfun(src, dst, fun, scale=None, offset=None, options=None, overviews=N
             for x in ['[', ']', ',']:
                 ov = ov.replace(x, '')
             ovr.text = ov
+    
+    if relpaths:
+        srcfiles = tree.xpath('//SourceFilename[@relativeToVRT="0"]')
+        for srcfile in srcfiles:
+            repl = os.path.relpath(srcfile.text, start=os.path.dirname(dst))
+            srcfile.text = repl
+            srcfile.attrib['relativeToVRT'] = '1'
     
     etree.indent(root)
     tree.write(dst, pretty_print=True, xml_declaration=False, encoding='utf-8')
