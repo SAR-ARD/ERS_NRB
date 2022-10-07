@@ -114,16 +114,23 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
 
     product_start = ids[0].meta['SPH_FIRST_LINE_TIME']
     product_stop = ids[0].meta['SPH_LAST_LINE_TIME']
-        
     meta = {'mission': ids[0].sensor,
             'mode': ids[0].meta['acquisition_mode'],
+            'polarization': {"['HH']": 'HH',
+                             "['VV']": 'VV',
+                             "['HH', 'HV']": 'HX',
+                             "['HV', 'HH']": 'HX',
+                             "['VV', 'HH']": 'VC',
+                             "['HH', 'VV']": 'VC',
+                             "['VH', 'VV']": 'VX',
+                             "['VV', 'VH']": 'VX'}[str(ids[0].polarizations)],            
             'start': product_start,
             'orbitnumber': ids[0].meta['orbitNumber_abs'],
             'datatake': hex(ids[0].meta['frameNumber']).replace('x', '').upper(),
             'stop': product_stop,
             'tile': tile,
             'id': 'ABCD'}
-    skeleton = '{mission}_{mode}_NRB__1SDV_{start}_{stop}_{orbitnumber:06}_{datatake:06}_{id}'
+    skeleton = '{mission}_{mode}_NRB__1S{polarization}_{start}_{stop}_{orbitnumber:06}_{datatake:06}_{id}'
 
     nrbdir = os.path.join(outdir, skeleton.format(**meta))
     os.makedirs(nrbdir, exist_ok=True)
@@ -258,6 +265,7 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     
     ###################################################################################################################
     # log-scaled gamma nought & color composite
+    print("log-scaled gamma nought & color composite")
     if len(measure_paths) > 1:
         log_vrts = []
         for item in measure_paths:
@@ -274,6 +282,7 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     
     ###################################################################################################################
     # Data mask
+    print("Data mask")
     if not config['dem_type'] == 'GETASSE30' and not os.path.isfile(wbm):
         raise FileNotFoundError('External water body mask could not be found: {}'.format(wbm))
     
@@ -293,6 +302,7 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     #                           overviews=overviews)
     ###################################################################################################################
     # sigma nought RTC
+    print("sigma nought RTC")
     for item in measure_paths:
         sigma0_rtc_lin = item.replace('g-lin.tif', 's-lin.vrt')
         sigma0_rtc_log = item.replace('g-lin.tif', 's-log.vrt')
@@ -312,6 +322,7 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
                        options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)        
     ####################################################################################################################
     # metadata
+    print("metadata")
     nrb_tifs = finder(nrbdir, ['-[a-z]{2,3}.tif'], regex=True, recursive=True)
     meta = extract.meta_dict(config=config, target=nrbdir, src_scenes=src_scenes, src_files=files, proc_time=proc_time)
     stacparser.main(meta=meta, target=nrbdir, tifs=nrb_tifs)
@@ -420,7 +431,6 @@ def main(config_file, section_name):
                     # geocode(infile=scene, outdir=config['out_dir'], t_srs=epsg, tmpdir=config['tmp_dir'],
                     #         standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
                     #         demName='SRTM 3Sec', externalDEMNoDataValue=ex_dem_nodata, **geocode_prms)
-                    print(f"Looks: {scene.meta['looks']}")
                     geocode(infile=scene, outdir=config['out_dir'], t_srs=epsg, tmpdir=config['tmp_dir'],
                             standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
                             externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, **geocode_prms, rlks=scene.meta['looks'][0], azlks=scene.meta['looks'][1])

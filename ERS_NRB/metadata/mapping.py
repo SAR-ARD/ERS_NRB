@@ -4,7 +4,7 @@ NRB_PATTERN = r'^(?P<sensor>ERS[12]|ASAR)_' \
               r'(?P<resolution>_)' \
               r'(?P<processingLevel>1)' \
               r'(?P<category>S)' \
-              r'(?P<pols>SH|SV|DH|DV|VV|HH|HV|VH)_' \
+              r'(?P<pols>HH|VV|HX|VC|VX)_' \
               r'(?P<start>[0-9]{8}T[0-9]{6})_' \
               r'(?P<stop>[0-9]{8}T[0-9]{6})_' \
               r'(?P<orbitNumber>[0-9]{6})_' \

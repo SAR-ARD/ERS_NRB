@@ -275,17 +275,6 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
     -------
     None
     """
-    # print(f"outname: {outname}")
-    # print(f"valid_mask_list: {valid_mask_list}")
-    # print(f"src_files: {src_files}")
-    # print(f"extent: {extent}")
-    # print(f"epsg: {epsg}")
-    # print(f"driver: {driver}")
-    # print(f"creation_opt: {creation_opt}")
-    # print(f"overviews: {overviews}")
-    # print(f"overview_resampling: {overview_resampling}")
-    # print(f"out_format: {out_format}")
-    # print(f"wbm: {wbm}")
     out_nodata = 255
     
     if out_format is None:
@@ -530,7 +519,8 @@ def set_logging(config):
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
     fh = logging.FileHandler(filename=log_file, mode='a')
     log_local.addHandler(fh)
-    
+    log_local.addHandler(sh)
+
     # Add header first with simple formatting
     form_simple = logging.Formatter("%(message)s")
     fh.setFormatter(form_simple)

@@ -79,7 +79,6 @@ def get_config(config_file, section_name='GENERAL'):
     except:
         out_dict['compression'] = 'LZW'
 
-    print(out_dict['compression'])
     # assert any([out_dict[k] is not None for k in ['aoi_tiles', 'aoi_geometry']])
     
     return out_dict
@@ -152,7 +151,7 @@ def geocode_conf(config):
             'clean_edges': True,
             'clean_edges_npixels': 3,
             'test': False,
-            'cleanup': False
+            'cleanup': True
             }
 
 
