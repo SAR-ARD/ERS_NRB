@@ -82,7 +82,7 @@ modification to insert the pixel function (a way to achieve this with GDAL's gda
     from lxml import etree
     from spatialist import gdalbuildvrt
 
-    def create_vrt(src, dst, fun, scale=None, offset=None, options=None):
+    def vrt_pixfun(src, dst, fun, scale=None, offset=None, options=None):
         gdalbuildvrt(src=src, dst=dst, options=options)
         tree = etree.parse(dst)
         root = tree.getroot()
