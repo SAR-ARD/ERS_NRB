@@ -1,12 +1,13 @@
 Changelog
 =========
 
-0.1.4 | 2022-10-07
+0.1.4 | 2022-10-10
 ------------------
 * Add compression as a config parameter
 * Compatibe with WSM
 * Use source range looks and azimuth looks
 * Write polarization code in final product
+* Fix colour composite
 `Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.3...0.1.4>`_
 
 0.1.3 | 2022-09-22
