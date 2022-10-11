@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1.5 | 2022-10-12
+------------------
+* Add xml metadata
+* Improve nodata for DEM download
+`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.4...0.1.5>`_
+
 0.1.4 | 2022-10-10
 ------------------
 * Add compression as a config parameter

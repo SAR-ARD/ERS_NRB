@@ -97,3 +97,17 @@ STAC
 
         product_json
         source_json
+
+XML
+^^^^
+
+.. automodule:: ERS_NRB.metadata.xmlparser
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. autosummary::
+        :nosignatures:
+
+        product_xml
+        source_xml       

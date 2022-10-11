@@ -406,7 +406,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['griddingConvention'] = 'Military Grid Reference System (MGRS)'
     meta['prod']['licence'] = None
     meta['prod']['majorCycleID'] = str(sid0.meta['cycleNumber'])
-    
+    meta['prod']['azimuthNumberOfLooks'] = sid0.meta['SPH_AZIMUTH_LOOKS']
+    meta['prod']['rangeNumberOfLooks'] = sid0.meta['SPH_RANGE_LOOKS']
     meta['prod']['noiseRemovalApplied'] = NOISE_MAP[sid0.acquisition_mode]
     # meta['prod']['noiseRemovalAlgorithm'] = 'https://doi.org/10.1109/tgrs.2018.2889381'
 

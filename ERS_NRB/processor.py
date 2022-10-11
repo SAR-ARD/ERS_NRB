@@ -19,7 +19,7 @@ from ERS_NRB.config import get_config, geocode_conf, gdal_conf
 
 import ERS_NRB.ancillary as ancil
 import ERS_NRB.tile_extraction as tile_ex
-from ERS_NRB.metadata import extract, stacparser
+from ERS_NRB.metadata import extract, stacparser, xmlparser
 gdal.UseExceptions()
 
 
@@ -326,7 +326,7 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     nrb_tifs = finder(nrbdir, ['-[a-z]{2,3}.tif'], regex=True, recursive=True)
     meta = extract.meta_dict(config=config, target=nrbdir, src_scenes=src_scenes, src_files=files, proc_time=proc_time)
     stacparser.main(meta=meta, target=nrbdir, tifs=nrb_tifs)
-
+    xmlparser.main(meta=meta, target=nrbdir, tifs=nrb_tifs)
 
 def main(config_file, section_name):
     config = get_config(config_file=config_file, section_name=section_name)
@@ -433,7 +433,7 @@ def main(config_file, section_name):
                     #         demName='SRTM 3Sec', externalDEMNoDataValue=ex_dem_nodata, **geocode_prms)
                     geocode(infile=scene, outdir=config['out_dir'], t_srs=epsg, tmpdir=config['tmp_dir'],
                             standardGridOriginX=align_dict['xmax'], standardGridOriginY=align_dict['ymin'],
-                            externalDEMFile=fname_dem, externalDEMNoDataValue=ex_dem_nodata, **geocode_prms, rlks=scene.meta['looks'][0], azlks=scene.meta['looks'][1])
+                            externalDEMFile=fname_dem, externalDEMNoDataValue=None, **geocode_prms, rlks=scene.meta['looks'][0], azlks=scene.meta['looks'][1])
 
                     t = round((time.time() - start_time), 2)
                     log.info('[GEOCODE] -- {scene} -- {time}'.format(scene=scene.scene, time=t))
@@ -542,7 +542,8 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
     if not os.path.isfile(fname_dem_tmp):
         dem_autoload(boxes, demType=config['dem_type'],
                      vrt=fname_dem_tmp, buffer=buffer, product='dem',
-                     username=username, password=password)
+                     username=username, password=password,
+                     dst_nodata=0, hide_nodata=True, crop=False)
     
     dem_names = []
     wbm_names = []
@@ -573,7 +574,7 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
                 bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
                 dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
                                 resampling_method='mode', pbar=True,
-                                outputBounds=bounds, threads=threads, nodata=-32767)
+                                outputBounds=bounds, threads=threads, nodata='None')
                     
         dem_names.append(dem_names_scene)
         wbm_names.append(wbm_names_scene)
