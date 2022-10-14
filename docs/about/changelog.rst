@@ -1,9 +1,11 @@
 Changelog
 =========
 
-0.1.5 | 2022-10-12
+0.1.5 | 2022-10-14
 ------------------
 * Add xml metadata
+* Add looks to product metadata
+* Add ESPG and WKT to source metadata
 * Improve nodata for DEM download
 `Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.4...0.1.5>`_
 
