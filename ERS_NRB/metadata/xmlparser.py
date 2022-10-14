@@ -644,12 +644,12 @@ def source_xml(meta, target):
         
         polCalMatrices = etree.SubElement(EarthObservationMetaData, _nsc('nrb:polCalMatrices'))
         polCalMatrices.text = meta['source'][uid]['polCalMatrices']
-        meanFaradayRotationAngle = etree.SubElement(EarthObservationMetaData, _nsc('nrb:meanFaradayRotationAngle'),
-                                                    attrib={'uom': 'deg'})
-        meanFaradayRotationAngle.text = meta['source'][uid]['faradayMeanRotationAngle']
-        referenceFaradayRotation = etree.SubElement(EarthObservationMetaData, _nsc('nrb:referenceFaradayRotation'),
-                                                    attrib={'type': _get_ref_type(ref_link=meta['source'][uid]['faradayRotationReference'])})
-        referenceFaradayRotation.text = meta['source'][uid]['faradayRotationReference']
+        # meanFaradayRotationAngle = etree.SubElement(EarthObservationMetaData, _nsc('nrb:meanFaradayRotationAngle'),
+        #                                             attrib={'uom': 'deg'})
+        # meanFaradayRotationAngle.text = meta['source'][uid]['faradayMeanRotationAngle']
+        # referenceFaradayRotation = etree.SubElement(EarthObservationMetaData, _nsc('nrb:referenceFaradayRotation'),
+        #                                             attrib={'type': _get_ref_type(ref_link=meta['source'][uid]['faradayRotationReference'])})
+        # referenceFaradayRotation.text = meta['source'][uid]['faradayRotationReference']
         # ionosphereIndicator = etree.SubElement(EarthObservationMetaData, _nsc('nrb:ionosphereIndicator'))
         # ionosphereIndicator.text = meta['source'][uid]['ionosphereIndicator']
         
