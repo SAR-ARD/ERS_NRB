@@ -403,7 +403,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['geom_xml_center'] = re.search(r'\(([-*0-9 .,]+)\)', prod_meta['wkt_pt']).group(1)
     meta['prod']['geom_xml_envelope'] = re.search(r'\(([-*0-9 .,]+)\)', prod_meta['wkt_env']).group(1)
     meta['prod']['griddingConventionURL'] = 'http://www.mgrs-data.org/data/documents/nga_mgrs_doc.pdf'
-    meta['prod']['griddingConvention'] = 'Military Grid Reference System (MGRS)'
+    meta['prod']['griddingConvention'] = 'UTM'
     meta['prod']['licence'] = None
     meta['prod']['majorCycleID'] = str(sid0.meta['cycleNumber'])
     meta['prod']['azimuthNumberOfLooks'] = sid0.meta['SPH_AZIMUTH_LOOKS']
@@ -474,6 +474,8 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
         meta['source'][uid]['processingCenter'] = src_sid[uid].meta['MPH_PROC_CENTER']
         meta['source'][uid]['processingDate'] = datetime.strptime(src_sid[uid].meta['MPH_PROC_TIME'], '%Y%m%dT%H%M%S')
         meta['source'][uid]['processingLevel'] = 'Level 1'
+        meta['source'][uid]['crsEPSG'] = '4636'
+        meta['source'][uid]['crsWKT'] = src_sid[uid].projection
         try :
             meta['source'][uid]['processorName'] = src_sid[uid].meta['MPH_SOFTWARE_VER'].split('/')[0]
             meta['source'][uid]['processorVersion'] = src_sid[uid].meta['MPH_SOFTWARE_VER'].split('/')[1]

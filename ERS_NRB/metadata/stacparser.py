@@ -334,6 +334,9 @@ def source_json(meta, target):
         item.properties['processing:software'] = {meta['source'][uid]['processorName']:
                                                   meta['source'][uid]['processorVersion']}
         item.properties['proj:shape'] = [meta['source'][uid]['lineLength'], meta['source'][uid]['lineTimeInterval']]
+        item.properties['proj:EPSG']= meta['source'][uid]['crsEPSG']
+        item.properties['proj:WKT']= meta['source'][uid]['crsWKT']
+
         item.properties['processing:level'] = meta['source'][uid]['processingLevel']
         
         item.properties['card4l:specification'] = meta['prod']['card4l-name']
