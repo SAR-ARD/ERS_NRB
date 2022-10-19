@@ -252,6 +252,8 @@ def product_xml(meta, target, tifs):
             numPixelsPerLine.text = meta['prod']['numPixelsPerLine']
             numBorderPixels = etree.SubElement(ProductInformation, _nsc('nrb:numBorderPixels'))
             numBorderPixels.text = str(meta['prod']['numBorderPixels'])
+            headerSize = etree.SubElement(ProductInformation, _nsc('nrb:headerSize'))
+            headerSize.text = str(os.path.getsize(tif))
             polarization = etree.SubElement(ProductInformation, _nsc('nrb:polarization'))
             polarization.text = re.search('[vh]{2}', tif).group().upper()
             backscatterMeasurement = etree.SubElement(ProductInformation, _nsc('nrb:backscatterMeasurement'))
@@ -386,6 +388,9 @@ def product_xml(meta, target, tifs):
     crsWKT = etree.SubElement(EarthObservationMetaData, _nsc('nrb:crsWKT'))
     crsWKT.text = meta['prod']['crsWKT']
     
+    bbox = etree.SubElement(EarthObservationMetaData, _nsc('nrb:bbox'))
+    bbox.text = str(meta['prod']['geom_stac_bbox_native'])
+
     refDoc = etree.SubElement(EarthObservationMetaData, _nsc('nrb:refDoc'),
                               attrib={'name': meta['prod']['card4l-name'],
                                       'version': meta['prod']['card4l-version'],
@@ -512,7 +517,7 @@ def source_xml(meta, target):
         minimumIncidenceAngle.text = str(meta['source'][uid]['incidenceAngleMin'])
         maximumIncidenceAngle = etree.SubElement(Acquisition, _nsc('sar:maximumIncidenceAngle'), attrib={'uom': 'deg'})
         maximumIncidenceAngle.text = str(meta['source'][uid]['incidenceAngleMax'])
-        
+
         ################################################################################################################
         observedProperty = etree.SubElement(root, _nsc('om:observedProperty'),
                                             attrib={_nsc('xsi:nil'): 'true', 'nilReason': 'inapplicable'})
@@ -555,6 +560,9 @@ def source_xml(meta, target):
         identifier.text = scene
         doi = etree.SubElement(EarthObservationMetaData, _nsc('eop:doi'))
         doi.text = meta['source'][uid]['doi']
+        access = etree.SubElement(EarthObservationMetaData, _nsc('nrb:access'),
+                                attrib={'type': _get_ref_type(ref_link=meta['source'][uid]['access'])})
+        access.text = meta['source'][uid]['access']      
         acquisitionType = etree.SubElement(EarthObservationMetaData, _nsc('eop:acquisitionType'))
         acquisitionType.text = meta['source'][uid]['acquisitionType']
         status = etree.SubElement(EarthObservationMetaData, _nsc('eop:status'))
@@ -617,6 +625,10 @@ def source_xml(meta, target):
 
         performance = etree.SubElement(EarthObservationMetaData, _nsc('nrb:performance'))
         PerformanceIndicators = etree.SubElement(performance, _nsc('nrb:PerformanceIndicators'))
+        neszNear = etree.SubElement(PerformanceIndicators, _nsc('nrb:minimumNoiseEquivilientBetaNaught'), attrib={'uom': 'db'})
+        neszNear.text = str(meta['source'][uid]['neszNear'])
+        neszFar = etree.SubElement(PerformanceIndicators, _nsc('nrb:maximumNoiseEquivilientBetaNaught'), attrib={'uom': 'db'})
+        neszFar.text = str(meta['source'][uid]['neszFar'])        
         noiseEquivalentIntensity = etree.SubElement(PerformanceIndicators, _nsc('nrb:noiseEquivalentIntensity'),
                                                     attrib={'uom': 'dB', 'type': str(meta['source'][uid]['perfNoiseEquivalentIntensityType'])})
         # for pol in meta['common']['polarisationChannels']:

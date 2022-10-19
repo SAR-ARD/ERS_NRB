@@ -402,7 +402,7 @@ def meta_dict(config, target, src_scenes, src_files, proc_time):
     meta['prod']['geom_stac_geometry_4326'] = stac_geometry_4326
     meta['prod']['geom_xml_center'] = re.search(r'\(([-*0-9 .,]+)\)', prod_meta['wkt_pt']).group(1)
     meta['prod']['geom_xml_envelope'] = re.search(r'\(([-*0-9 .,]+)\)', prod_meta['wkt_env']).group(1)
-    meta['prod']['griddingConventionURL'] = 'http://www.mgrs-data.org/data/documents/nga_mgrs_doc.pdf'
+    meta['prod']['griddingConventionURL'] = 'https://doi.org/10.3133/fs07701'
     meta['prod']['griddingConvention'] = 'UTM'
     meta['prod']['licence'] = None
     meta['prod']['majorCycleID'] = str(sid0.meta['cycleNumber'])
