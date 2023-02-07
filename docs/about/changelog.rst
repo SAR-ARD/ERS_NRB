@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.6 | 2023-02-07
+------------------
+* Add MGRS Tiling
+`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.5...0.1.6>`_
+
 0.1.5 | 2022-10-14
 ------------------
 * Add xml metadata

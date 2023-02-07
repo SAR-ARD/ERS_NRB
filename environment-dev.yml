@@ -17,3 +17,4 @@ dependencies:
   - rsgislib
   - pyproj
   - shapely
+  - spatialist>=0.12.0

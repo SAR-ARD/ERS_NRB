@@ -44,5 +44,5 @@ repository for available versions.
 
 ::
 
-    pip install git+https://github.com/SAR-ARD/ERS_NRB.git@0.1.2
+    pip install git+https://github.com/SAR-ARD/ERS_NRB.git@0.1.6
 

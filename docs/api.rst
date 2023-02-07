@@ -17,7 +17,7 @@ Configuration
         geocode_conf
         get_config
 
-AOI Generation
+Tile Extraction
 -------------
 
 .. automodule:: ERS_NRB.tile_extraction
@@ -29,6 +29,9 @@ AOI Generation
         :nosignatures:
 
         no_aoi
+        tiles_from_aoi
+        description2dict
+        extract_tile
 
 Processing
 ----------

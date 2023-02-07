@@ -28,7 +28,7 @@ def get_config(config_file, section_name='GENERAL'):
     parser.read(config_file)
     parser_sec = parser[section_name]
     
-    allowed_keys = ['mode', 'mindate', 'maxdate', 'acq_mode',
+    allowed_keys = ['mode', 'mindate', 'maxdate', 'acq_mode', 'aoi_tiles', 'aoi_geometry', 'kml_file',
                     'work_dir', 'scene_dir', 'out_dir', 'tmp_dir', 'dem_dir', 'wbm_dir',
                     'db_file', 'dem_type', 'gdal_threads', 'compression']
     out_dict = {}
@@ -43,12 +43,12 @@ def get_config(config_file, section_name='GENERAL'):
             allowed = ['nrb', 'snap', 'all']
             assert v in allowed, "Parameter '{}': expected to be one of {}; got '{}' instead".format(k, allowed, v)
             v = v.lower()
-        # if k == 'aoi_tiles':
-        #     if v is not None:
-        #         v = parser_sec.get_tile_list(k)
-        # if k == 'aoi_geometry':
-        #     if v is not None:
-        #         assert os.path.isfile(v), "Parameter '{}': File {} could not be found".format(k, v)
+        if k == 'aoi_tiles':
+            if v is not None:
+                v = parser_sec.get_tile_list(k)
+        if k == 'aoi_geometry':
+            if v is not None:
+                assert os.path.isfile(v), "Parameter '{}': File {} could not be found".format(k, v)
         if k.endswith('date'):
             v = parser_sec.get_datetime(k)
         if k == 'acq_mode':
@@ -79,7 +79,7 @@ def get_config(config_file, section_name='GENERAL'):
     except:
         out_dict['compression'] = 'LZW'
 
-    # assert any([out_dict[k] is not None for k in ['aoi_tiles', 'aoi_geometry']])
+    assert any([out_dict[k] is not None for k in ['aoi_tiles', 'aoi_geometry']])
     
     return out_dict
 
@@ -151,7 +151,7 @@ def geocode_conf(config):
             'clean_edges': True,
             'clean_edges_npixels': 3,
             'test': False,
-            'cleanup': True
+            'cleanup': False
             }
 
 

@@ -18,6 +18,17 @@ Options: ``all | nrb | snap``
 
 This parameter determines if the entire processing chain should be executed or only part of it.
 
+- **aoi_tiles** & **aoi_geometry**
+
+The area of interest (AOI) for which ERS-NRB products should be created.
+
+``aoi_tiles`` can be used to define the area of interest via MGRS tile IDs, which must be provided comma-separated (e.g.,
+``aoi_tiles = 32TNS, 32TMT, 32TMS``). ``aoi_geometry`` defines the area of interest via a full path to a vector file
+supported by :class:`spatialist.vector.Vector`. This option will automatically search for overlapping MGRS tiles and use
+these for processing.
+Both parameters are optional and can be set to ``None`` or left empty. ``aoi_tiles`` overrides ``aoi_geometry``.
+If neither is defined, all tiles overlapping with the scene search result are processed.
+
 - **mindate** & **maxdate**
 
 The time period to create ERS-NRB products for. Allowed date formats are ``%Y-%m-%d`` and ``%Y-%m-%dT%H:%M:%S``.
@@ -46,6 +57,15 @@ subdirectories relative to the directory specified with ``work_dir``. E.g., ``de
 Any ASAR/ERS scenes found in ``scene_dir`` will be stored in a database file created by :class:`pyrosar.drivers.Archive`.
 With ``db_file`` either a full path to an existing database can be provided or it will be created in ``work_dir`` if only
 a filename is provided. E.g., ``db_file = scenes.db`` will automatically create the database file ``/<work_dir>/scenes.db``.
+
+- **kml_file**
+
+The Sentinel-2 Military Grid Reference System (MGRS) tiling system establishes the basis of the processing chain and a
+local reference file containing the respective tile information for processing S1-NRB products is needed. The official
+KML file provided by ESA can be retrieved `here <https://sentinel.esa.int/documents/247904/1955685/S2A_OPER_GIP_TILPAR_MPC__20151209T095117_V20150622T000000_21000101T000000_B00.kml>`_.
+With the ``kml_file`` parameter either a full path to this reference file can be provided or it is expected to be located
+in the directory provided with ``work_dir`` if only a filename is provided. E.g., the processor expects to find
+``/<work_dir>/s2_grid.kml`` if ``kml_file = s2_grid.kml``.
 
 - **dem_type**
 

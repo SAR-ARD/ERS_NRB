@@ -370,8 +370,8 @@ def main(config_file, section_name):
     # geometry and DEM handling
     ids = identify_many(selection)
 
-    # geo_dict, align_dict = tile_ex.main(config=config, spacing=geocode_prms['spacing'])
-    geo_dict, align_dict = tile_ex.no_aoi(ids=ids, spacing=geocode_prms['spacing'])
+    geo_dict, align_dict = tile_ex.main(config=config, tr=geocode_prms['spacing'])
+    # geo_dict, align_dict = tile_ex.no_aoi(ids=ids, spacing=geocode_prms['spacing'])
     aoi_tiles = list(geo_dict.keys())
     epsg_set = set([geo_dict[tile]['epsg'] for tile in list(geo_dict.keys())])
     if len(epsg_set) != 1:
@@ -398,7 +398,6 @@ def main(config_file, section_name):
             # DEM disable
             dem_buffer = 200  # meters
             fname_dem = os.path.join(config['tmp_dir'], scene.outname_base() + '_DEM.tif')
-            fname_wbm = os.path.join(config['tmp_dir'], scene.outname_base() + '_WBM.tif')
             if not os.path.isfile(fname_dem):
                 with scene.geometry() as footprint:
                     footprint.reproject(epsg)
@@ -408,18 +407,8 @@ def main(config_file, section_name):
                     extent['xmax'] += dem_buffer
                     extent['ymax'] += dem_buffer
                     with bbox(extent, epsg) as dem_box:
-                        if isinstance(dem_names[i], list) and len(dem_names[i]) == 1:
-                            print("Ups list of one, let me fix it")
-                            dem_names[i] = dem_names[i][0]
                         with Raster(dem_names[i], list_separate=False)[dem_box] as dem_mosaic:
-                            dem_mosaic.write(fname_dem, format='GTiff')
-                    with bbox(extent, epsg) as dem_box:
-
-                        if isinstance(wbm_names[i], list) and len(wbm_names[i]) == 1:
-                            print("Ups list of one, let me fix it")
-                            wbm_names[i] = wbm_names[i][0]
-                        with Raster(wbm_names[i], list_separate=False)[dem_box] as dem_mosaic:
-                            dem_mosaic.write(fname_wbm, format='GTiff')                           
+                            dem_mosaic.write(fname_dem, format='GTiff')                         
             
             list_processed = finder(config['out_dir'], [scene.start], regex=True, recursive=False)
             exclude = list(np_dict.values())
@@ -459,15 +448,11 @@ def main(config_file, section_name):
             os.makedirs(outdir, exist_ok=True)
             wbm = os.path.join(config['wbm_dir'], config['dem_type'], '{}_WBM.tif'.format(tile))
             # wbm = fname_wbm
-
             if not os.path.isfile(wbm):
                 wbm = None
             for s, scenes in enumerate(selection_grouped):
                 if isinstance(scenes, str):                    
                     scenes = [scenes]
-                outnames = [x.outname_base() for x in identify_many(scenes)]
-                if tile not in outnames:
-                    continue
                 print('###### [NRB] Tile {t}/{t_total}: {tile} | '
                       'Scenes {s}/{s_total}: {scenes} '.format(tile=tile, t=t+1, t_total=len(aoi_tiles),
                                                                scenes=[os.path.basename(s) for s in scenes],
@@ -547,38 +532,30 @@ def prepare_dem(id_list, config, threads, epsg, spacing, buffer=None):
     
     dem_names = []
     wbm_names = []
-    geo_dict, align_dict = tile_ex.no_aoi(ids=id_list, spacing=spacing)    
     for scene in id_list:
-        dem_names_scene = []
-        wbm_names_scene = []
-        print('### creating DEM tiles for scene: {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
-                                                                            tiles=scene.outname_base()))
-        dem_tile = os.path.join(dem_dir, '{}_DEM.tif'.format(scene.outname_base()))
-        dem_names_scene.append(dem_tile)
-        if not os.path.isfile(dem_tile):
-            ext = geo_dict[scene.outname_base()]['ext']
-            bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
-            dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
-                        geoid_convert=True, geoid=geoid, pbar=True,
-                            outputBounds=bounds, threads=threads, nodata=-32767)
-                    
-        if os.path.isfile(fname_wbm_tmp):
-            print('### creating WBM tiles for scene {scene}\n{tiles}'.format(scene=os.path.basename(scene.scene),
-                                                                                tiles=scene.outname_base()))
-            wbm_tile = os.path.join(wbm_dir, '{}_WBM.tif'.format(scene.outname_base()))
-            wbm_names_scene.append(wbm_tile)
-
-            if not os.path.isfile(wbm_tile):
-                ext = geo_dict[scene.outname_base()]['ext']
-                # ext = scene.getCorners()
-                bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
-                dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
-                                resampling_method='mode', pbar=True,
-                                outputBounds=bounds, threads=threads, nodata='None')
-                    
-        dem_names.append(dem_names_scene)
-        wbm_names.append(wbm_names_scene)
-
+            dem_names_scene = []
+            with scene.bbox() as box:
+                tiles = tile_ex.tiles_from_aoi(vectorobject=box, kml=config['kml_file'], epsg=epsg)
+                for tilename in tiles:
+                    dem_tile = os.path.join(dem_dir, '{}_DEM.tif'.format(tilename))
+                    dem_names_scene.append(dem_tile)
+                    if not os.path.isfile(dem_tile):
+                        with tile_ex.extract_tile(config['kml_file'], tilename) as tile:
+                            ext = tile.extent
+                            bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
+                            dem_create(src=fname_dem_tmp, dst=dem_tile, t_srs=epsg, tr=(tr, tr),
+                                        geoid_convert=True, geoid=geoid, pbar=True,
+                                        outputBounds=bounds, threads=threads, nodata=-32767)
+                if os.path.isfile(fname_wbm_tmp):
+                    for tilename in tiles:
+                        wbm_tile = os.path.join(wbm_dir, '{}_WBM.tif'.format(tilename))
+                        if not os.path.isfile(wbm_tile):
+                            with tile_ex.extract_tile(config['kml_file'], tilename) as tile:
+                                ext = tile.extent
+                                bounds = [ext['xmin'], ext['ymin'], ext['xmax'], ext['ymax']]
+                                dem_create(src=fname_wbm_tmp, dst=wbm_tile, t_srs=epsg, tr=(tr, tr),
+                                        resampling_method='mode', pbar=True, outputBounds=bounds, threads=threads, nodata=-32767)
+            dem_names.append(dem_names_scene)
     boxes = None  # make sure all bounding box Vector objects are deleted
     
     return dem_names, wbm_names
