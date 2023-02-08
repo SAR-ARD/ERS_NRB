@@ -8,10 +8,8 @@ import numpy as np
 from osgeo import gdal
 from spatialist import Raster, Vector, vectorize, boundary, bbox, intersect, rasterize
 from spatialist.ancillary import finder
-from spatialist.auxil import gdalbuildvrt
-from rsgislib.imageutils import gdal_warp
+from spatialist.auxil import gdalbuildvrt, gdalwarp
 from pyroSAR import identify_many, Archive
-
 from pyroSAR.snap.util import geocode
 from pyroSAR.ancillary import find_datasets
 from pyroSAR.auxdata import dem_autoload, dem_create
@@ -248,8 +246,10 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
             etree.indent(root)
             tree.write(source, pretty_print=True, xml_declaration=False, encoding='utf-8')
             
-            gdal_warp(source, outname, epsg, gdalformat=driver, use_multi_threaded=multithread, 
-                        options=write_options[key])
+            snap_nodata = 0
+            gdalwarp(source, outname,
+                     options={'format': driver, 'outputBounds': bounds, 'srcNodata': snap_nodata, 'dstNodata': 'nan',
+                              'multithread': multithread, 'creationOptions': write_options[key]})            
     
     proc_time = datetime.now()
     t = proc_time.isoformat().encode()
