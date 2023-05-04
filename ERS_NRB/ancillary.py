@@ -12,8 +12,69 @@ from osgeo import gdal
 import spatialist
 from spatialist import gdalbuildvrt, Raster, bbox
 import pyroSAR
-from pyroSAR import identify, examine
+from pyroSAR import identify, examine, identify_many
 
+def group_by_time(scenes, time=3):
+    """
+    Group scenes by their acquisition time difference.
+    Parameters
+    ----------
+    scenes:list[pyroSAR.drivers.ID or str]
+        a list of image names
+    time: int or float
+        a time difference in seconds by which to group the scenes.
+        The default of 3 seconds incorporates the overlap between SLCs.
+    Returns
+    -------
+    list[list[pyroSAR.drivers.ID]]
+        a list of sub-lists containing the file names of the grouped scenes
+    """
+    # sort images by time stamp
+    scenes = identify_many(scenes, sortkey='start')
+    
+    if len(scenes) < 2:
+        return [scenes]
+    
+    groups = [[scenes[0]]]
+    group = groups[0]
+    
+    for i in range(1, len(scenes)):
+        start = datetime.strptime(scenes[i].start, '%Y%m%dT%H%M%S')
+        stop_pred = datetime.strptime(scenes[i - 1].stop, '%Y%m%dT%H%M%S')
+        diff = (stop_pred - start).total_seconds()
+        if diff <= time:
+            group.append(scenes[i])
+        else:
+            groups.append([scenes[i]])
+            group = groups[-1]
+    return groups
+
+def check_scene_consistency(scenes):
+    """
+    Check the consistency of a scene selection.
+    The following pyroSAR object attributes must be the same:
+    
+     - sensor
+     - acquisition_mode
+     - product
+     - frameNumber (data take ID)
+    
+    Parameters
+    ----------
+    scenes: list[str or pyroSAR.drivers.ID]
+    Returns
+    -------
+    
+    Raises
+    ------
+    RuntimeError
+    """
+    scenes = identify_many(scenes)
+    for attr in ['sensor', 'acquisition_mode', 'product', 'frameNumber']:
+        values = set([getattr(x, attr) for x in scenes])
+        if not len(values) == 1:
+            msg = f"scene selection differs in attribute '{attr}': {values}"
+            raise RuntimeError(msg)
 
 def vrt_pixfun(src, dst, fun, relpaths= None, scale=None, offset=None, args=None, options=None, overviews=None, overview_resampling=None):
     """
@@ -333,7 +394,8 @@ def create_data_mask(outname, valid_mask_list, src_files, extent, epsg, driver, 
             if wbm is not None:
                 with Raster(wbm) as ras_wbm:
 
-                    arr_wbm = ras_wbm.array()
+                    # Issue 1.1 Gdal somtimes creates an extra pixel, this makes sure that they are the same size
+                    arr_wbm = ras_wbm.array()[:rows, :cols]
                     out_arr = np.where((arr_wbm == 1), 4, arr_snap_dm)
                     del arr_wbm
             else:

@@ -287,8 +287,8 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
         raise FileNotFoundError('External water body mask could not be found: {}'.format(wbm))
     
     dm_path = gs_path.replace('-gs.tif', '-dm.tif')
-    with Raster(wbm) as ras_wbm:
-        extent = ras_wbm.extent
+    with Raster(gs_path) as ras_gs:
+        extent = ras_gs.extent
     
     ancil.create_data_mask(outname=dm_path, valid_mask_list=snap_dm_tile_overlap, src_files=files,
                            extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['layoverShadowMask'],
