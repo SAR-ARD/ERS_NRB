@@ -3,9 +3,9 @@ Changelog
 
 0.1.7 | 2023-05-09
 ------------------
-* Fix metadata clipping
-* Fix gamma log vrt nodata issue
-`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.5...0.1.6>`_
+* Fix metadata clipping `Issue 1.1 <https://github.com/SAR-ARD/ERS_NRB/issues/1>`_
+* Fix gamma log vrt nodata issue `Issue 1.2 <https://github.com/SAR-ARD/ERS_NRB/issues/1>`_
+`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.6...0.1.7>`_
 
 0.1.6 | 2023-02-07
 ------------------
