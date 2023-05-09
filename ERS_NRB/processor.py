@@ -270,16 +270,22 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
         log_vrts = []
         for item in measure_paths:
             log = item.replace('lin.tif', 'log.vrt')
+            lin = item.replace('lin.tif', 'lin.vrt')
+
             log_vrts.append(log)
+            if not os.path.isfile(lin):
+                ancil.vrt_pixfun(src=[item, gs_path], dst=lin, fun='mul',
+                                options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)            
+                ancil.vrt_relpath(lin)
+
             if not os.path.isfile(log):
-                ancil.vrt_pixfun(src=item, dst=log, fun='log10', scale=10,
-                                options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
+                ancil.vrt_pixfun(src=lin, dst=log, fun='log10', scale=10,
+                        options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
         
         cc_path = re.sub('[hv]{2}', 'cc', measure_paths[0]).replace('.tif', '.vrt')
         cc_path = re.sub('[hv]{2}', 'cc', log_vrts[0])
         ancil.create_rgb_vrt(outname=cc_path, infiles=measure_paths, overviews=overviews,
                          overview_resampling=ovr_resampling)
-    
     ###################################################################################################################
     # Data mask
     print("Data mask")
@@ -295,11 +301,11 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
                            overviews=overviews, overview_resampling=ovr_resampling, wbm=wbm)
     ###################################################################################################################
     # Acquisition ID image
-    # with Raster(gs_path) as ras_gs:
-    #     extent = ras_gs.extent    
-    # ancil.create_acq_id_image(ref_tif=gs_path, valid_mask_list=snap_dm_tile_overlap, src_scenes=src_scenes,
-    #                           extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['acquisitionImage'],
-    #                           overviews=overviews)
+    with Raster(gs_path) as ras_gs:
+        extent = ras_gs.extent    
+    ancil.create_acq_id_image(ref_tif=gs_path, valid_mask_list=snap_dm_tile_overlap, src_scenes=src_scenes,
+                              extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['acquisitionImage'],
+                              overviews=overviews)
     ###################################################################################################################
     # sigma nought RTC
     print("sigma nought RTC")
@@ -315,11 +321,8 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
         if not os.path.isfile(sigma0_rtc_log):
             ancil.vrt_pixfun(src=sigma0_rtc_lin, dst=sigma0_rtc_log, fun='log10', scale=10,
                              options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
-        
-        gamma0_rtc_log = item.replace('lin.tif', 'log.vrt')
-        if not os.path.isfile(gamma0_rtc_log):
-            ancil.vrt_pixfun(src=item, dst=gamma0_rtc_log, fun='log10', scale=10,
-                       options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)        
+
+
     ####################################################################################################################
     # metadata
     print("metadata")
