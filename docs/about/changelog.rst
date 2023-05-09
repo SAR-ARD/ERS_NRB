@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1.7 | 2023-05-09
+------------------
+* Fix metadata clipping
+* Fix gamma log vrt nodata issue
+`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.5...0.1.6>`_
+
 0.1.6 | 2023-02-07
 ------------------
 * Add MGRS Tiling
