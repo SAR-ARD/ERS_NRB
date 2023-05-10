@@ -9,7 +9,7 @@ dependencies:
   - lxml
   - pystac
   - scipy
-  - sphinx
+  - sphinx<=6.2.1
   - sphinxcontrib-bibtex>=2.2
   - nbsphinx
   - sphinx_rtd_theme
