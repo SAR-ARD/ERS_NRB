@@ -81,11 +81,7 @@ Extraction
     .. autosummary::
         :nosignatures:
 
-        calc_geolocation_accuracy
         calc_performance_estimates
-        extract_pslr_islr
-        geometry_from_vec
-        get_header_size
         get_prod_meta
         meta_dict
         vec_from_srccoords
