@@ -61,8 +61,11 @@ Ancillary Functions
 
         generate_unique_id
         get_max_ext
-        log
         set_logging
+        generate_unique_id
+        create_rgb_vrt
+        vrt_relpath
+        vrt_pixfun
 
 Metadata
 --------
