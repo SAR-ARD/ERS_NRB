@@ -18,7 +18,7 @@ Configuration
         get_config
 
 Tile Extraction
--------------
+---------------
 
 .. automodule:: ERS_NRB.tile_extraction
     :members:

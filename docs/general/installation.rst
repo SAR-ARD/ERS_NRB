@@ -25,7 +25,7 @@ Alternatively, updates for individual modules and versions can be downloaded in 
 The latest bundle that was used during release of version 0.1.2 is available here: https://step.esa.int/updatecenter/8.0_20220323-143356/.
 
 ERS_NRB
-------
+-------
 
 The ERS_NRB package is not yet available via conda-forge or other common package distribution channels. In the meantime,
 the following shall provide a convenient installation option provided that Anaconda or Miniconda has been installed:

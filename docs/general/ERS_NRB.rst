@@ -1,5 +1,5 @@
 ERS_NRB Production
-=================
+==================
 
 The following describes the current workflow for producing the ASAR/ERS Normalised Radar Backscatter product (ERS_NRB), which is being developed in study 1 of the COPA project.
 This is not part of the official pyroSAR documentation.
