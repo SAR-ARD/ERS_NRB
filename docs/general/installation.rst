@@ -35,7 +35,7 @@ the following shall provide a convenient installation option provided that Anaco
 ::
 
     conda env create --file https://raw.githubusercontent.com/SAR-ARD/ERS_NRB/main/environment-tpz.yaml
-    conda activate nrb_env
+    conda activate nrb_env_tpz
 
 2. Install the ERS_NRB package into the environment
 
