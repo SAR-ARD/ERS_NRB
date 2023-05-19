@@ -263,30 +263,6 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     gs_path = finder(nrbdir, [r'gs\.tif$'], regex=True)[0]
     measure_paths = finder(nrbdir, ['[hv]{2}-g-lin.tif$'], regex=True)
     
-    ###################################################################################################################
-    # log-scaled gamma nought & color composite
-    print("log-scaled gamma nought & color composite")
-    if len(measure_paths) > 1:
-        log_vrts = []
-        for item in measure_paths:
-            log = item.replace('lin.tif', 'log.vrt')
-            lin = item.replace('lin.tif', 'lin.vrt')
-
-            log_vrts.append(log)
-            if not os.path.isfile(lin):
-                ancil.vrt_pixfun(src=[item, gs_path], dst=lin, fun='mul',
-                                options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)            
-                ancil.vrt_relpath(lin)
-
-            if not os.path.isfile(log):
-                ancil.vrt_pixfun(src=lin, dst=log, fun='log10', scale=10,
-                        options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
-        
-        cc_path = re.sub('[hv]{2}', 'cc', measure_paths[0]).replace('.tif', '.vrt')
-        cc_path = re.sub('[hv]{2}', 'cc', log_vrts[0])
-        ancil.create_rgb_vrt(outname=cc_path, infiles=measure_paths, overviews=overviews,
-                         overview_resampling=ovr_resampling)
-    ###################################################################################################################
     # Data mask
     print("Data mask")
     if not config['dem_type'] == 'GETASSE30' and not os.path.isfile(wbm):
@@ -295,7 +271,7 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
     dm_path = gs_path.replace('-gs.tif', '-dm.tif')
     with Raster(gs_path) as ras_gs:
         extent = ras_gs.extent
-    
+    ###################################################################################################################    
     ancil.create_data_mask(outname=dm_path, valid_mask_list=snap_dm_tile_overlap, src_files=files,
                            extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['layoverShadowMask'],
                            overviews=overviews, overview_resampling=ovr_resampling, wbm=wbm)
@@ -307,12 +283,12 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
                               extent=extent, epsg=epsg, driver=driver, creation_opt=write_options['acquisitionImage'],
                               overviews=overviews)
     ###################################################################################################################
-    # sigma nought RTC
+    # sigma & gamma nought RTC
     print("sigma nought RTC")
     for item in measure_paths:
         sigma0_rtc_lin = item.replace('g-lin.tif', 's-lin.vrt')
         sigma0_rtc_log = item.replace('g-lin.tif', 's-log.vrt')
-        
+
         if not os.path.isfile(sigma0_rtc_lin):
             ancil.vrt_pixfun(src=[item, gs_path], dst=sigma0_rtc_lin, fun='mul',
                              options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
@@ -322,7 +298,40 @@ def nrb_processing(config, scenes, datadir, outdir, tile, extent, epsg, wbm=None
             ancil.vrt_pixfun(src=sigma0_rtc_lin, dst=sigma0_rtc_log, fun='log10', scale=10,
                              options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
 
+        gamma0_rtc_log = item.replace('lin.tif', 'log.vrt')
+        gamma0_rtc_lin = item.replace('lin.tif', 'lin.vrt')
 
+        if not os.path.isfile(gamma0_rtc_lin):
+            ancil.vrt_pixfun(src=[item, gs_path], dst=gamma0_rtc_lin, fun='mul',
+                            options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)            
+            ancil.vrt_relpath(gamma0_rtc_lin)
+
+        if not os.path.isfile(gamma0_rtc_log):
+            ancil.vrt_pixfun(src=gamma0_rtc_lin, dst=gamma0_rtc_log, fun='log10', scale=10,
+                       options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
+    ###################################################################################################################
+    # log-scaled gamma nought & color composite
+    if len(measure_paths) > 1:
+        print("log-scaled gamma nought & color composite")
+        log_vrts = []
+        for item in measure_paths:
+            log = item.replace('lin.tif', 'log.vrt')
+            lin = item.replace('lin.tif', 'lin.vrt')
+            log_vrts.append(log)
+            ## The file should be already present (previous step)
+            if not os.path.isfile(lin):
+                ancil.vrt_pixfun(src=[item, gs_path], dst=lin, fun='mul',
+                                options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)            
+                ancil.vrt_relpath(lin)
+            ## The file should be already present (previous step)
+            if not os.path.isfile(log):
+                ancil.vrt_pixfun(src=lin, dst=log, fun='log10', scale=10,
+                        options={'VRTNodata': 'NaN'}, overviews=overviews, overview_resampling=ovr_resampling)
+        
+        cc_path = re.sub('[hv]{2}', 'cc', measure_paths[0]).replace('.tif', '.vrt')
+        cc_path = re.sub('[hv]{2}', 'cc', log_vrts[0])
+        ancil.create_rgb_vrt(outname=cc_path, infiles=measure_paths, overviews=overviews,
+                         overview_resampling=ovr_resampling)                       
     ####################################################################################################################
     # metadata
     print("metadata")

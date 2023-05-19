@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.8 | 2023-05-19
+------------------
+* Fix missing vrt
+`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.7...0.1.8>`_
+
 0.1.7 | 2023-05-09
 ------------------
 * Fix metadata clipping
