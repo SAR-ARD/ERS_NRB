@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.9 | 2023-07-17
+------------------
+* Added Dockerfile to simplify installation
+`Full Changelog <https://github.com/SAR-ARD/ERS_NRB/compare/0.1.8...0.1.9>`_
+
 0.1.8 | 2023-05-19
 ------------------
 * Fix missing vrt

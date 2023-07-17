@@ -44,5 +44,10 @@ repository for available versions.
 
 ::
 
-    pip install git+https://github.com/SAR-ARD/ERS_NRB.git@0.1.8
+    pip install git+https://github.com/SAR-ARD/ERS_NRB.git@0.1.9
+
+Docker
+------
+
+Both SNAP and S1_NRB can also be installed into a docker container using the Dockerfile that is provided with the package.
 
