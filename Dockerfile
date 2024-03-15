@@ -4,7 +4,7 @@ USER root
 
 # fix error "ttyname failed: Inappropriate ioctl for device"
 RUN sed -i ~/.profile -e 's/mesg n || true/tty -s \&\& mesg n/g'
-
+RUN echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list
 RUN apt-get update && apt-get install -y \
     software-properties-common
 RUN apt-get install -y git python3-pip wget libpq-dev
