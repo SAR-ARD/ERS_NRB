@@ -49,5 +49,5 @@ repository for available versions.
 Docker
 ------
 
-Both SNAP and S1_NRB can also be installed into a docker container using the Dockerfile that is provided with the package.
+Both SNAP (9.0.0 + updates) and ERS_NRB can also be installed into a docker container using the Dockerfile that is provided with the package or using the dockerhub image in https://hub.docker.com/repository/docker/gr4n0t4/ers_nrb/general
 
